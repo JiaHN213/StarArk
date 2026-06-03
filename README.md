@@ -115,7 +115,7 @@
 
 ```bash
 # 1. 进入项目目录
-cd personal-site
+cd StarArk
 
 # 2. （推荐）创建虚拟环境
 python -m venv .venv
@@ -284,7 +284,7 @@ export DEEPSEEK_API_KEY=sk-xxxxxxxx
 ```powershell
 # 下载 nssm: https://nssm.cc/download
 nssm install StarArk "C:\path\to\python.exe" "E:\path\to\app.py"
-nssm set StarArk AppDirectory "E:\path\to\personal-site"
+nssm set StarArk AppDirectory "E:\path\to\StarArk"
 nssm set StarArk Start SERVICE_AUTO_START
 nssm start StarArk
 ```
@@ -335,7 +335,7 @@ export DATABASE_URL="postgresql://用户名:密码@主机:5432/数据库名"
 ## 项目结构
 
 ```
-personal-site/
+StarArk/
 ├── app.py                      # Flask 主程序（模型 / 路由 / 业务逻辑）
 ├── start.bat                   # 守护启动脚本（自动探测 Python）
 ├── requirements.txt            # Python 依赖
