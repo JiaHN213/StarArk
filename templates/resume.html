@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}简历{% endblock %}
+{% block content %}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+    <div>
+        <h4 class="mb-1"><i class="bi bi-file-earmark-person me-2"></i>我的简历</h4>
+        <small class="text-muted">{{ resumes|length }} 份简历 · 支持针对不同公司创建多个版本</small>
+    </div>
+    <form method="POST" action="{{ url_for('resume_create') }}" class="d-flex gap-2">
+        <input type="text" name="title" class="form-control form-control-sm" placeholder="简历名称（如：阿里-后端）" style="width:200px">
+        <button class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> 新建简历</button>
+    </form>
+</div>
+
+{% if resumes %}
+<div class="row g-3">
+    {% for r in resumes %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 resume-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h5 class="card-title mb-0 text-truncate" title="{{ r.title }}">
+                        <i class="bi bi-file-earmark-person text-purple"></i> {{ r.title }}
+                    </h5>
+                </div>
+                {% if r.target_company or r.target_role %}
+                <div class="mb-2">
+                    {% if r.target_company %}<span class="badge bg-info me-1"><i class="bi bi-building"></i> {{ r.target_company }}</span>{% endif %}
+                    {% if r.target_role %}<span class="badge bg-secondary">{{ r.target_role }}</span>{% endif %}
+                </div>
+                {% endif %}
+                <p class="text-muted small mb-3">
+                    <i class="bi bi-clock"></i> 更新于 {{ r.updated_at | format_time }}
+                </p>
+                <div class="d-flex gap-1 flex-wrap">
+                    <a href="{{ url_for('resume_view', resume_id=r.id) }}" class="btn btn-sm btn-outline-info"><i class="bi bi-eye"></i> 预览</a>
+                    <a href="{{ url_for('resume_edit', resume_id=r.id) }}" class="btn btn-sm btn-primary"><i class="bi bi-pencil"></i> 编辑</a>
+                    <form method="POST" action="{{ url_for('resume_duplicate', resume_id=r.id) }}" class="d-inline">
+                        <button class="btn btn-sm btn-outline-secondary" title="复制一份用于其他岗位"><i class="bi bi-files"></i></button>
+                    </form>
+                    <form method="POST" action="{{ url_for('resume_delete', resume_id=r.id) }}" class="d-inline" onsubmit="return confirm('确定删除？此操作不可恢复。')">
+                        <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-5">
+    <i class="bi bi-file-earmark-person" style="font-size:4rem; color:var(--text-dim);"></i>
+    <h5 class="text-muted mt-3 mb-2">还没有简历</h5>
+    <p class="text-muted">填写一份基础简历，可针对不同公司复制成多个版本，支持 7 套模板与高清 PDF 导出</p>
+    <form method="POST" action="{{ url_for('resume_create') }}" class="d-inline-block mt-2">
+        <input type="hidden" name="title" value="我的简历">
+        <button class="btn btn-primary"><i class="bi bi-plus-lg"></i> 创建第一份简历</button>
+    </form>
+</div>
+{% endif %}
+
+{% endblock %}

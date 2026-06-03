@@ -1,0 +1,757 @@
+{% extends "base.html" %}
+{% block title %}编辑简历 · {{ resume.title }}{% endblock %}
+{% block content %}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+    <div class="d-flex align-items-center gap-2">
+        <a href="{{ url_for('resume_list') }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
+        <input type="text" id="r-title" class="form-control" value="{{ resume.title }}" style="max-width:300px; font-weight:600;">
+        <span id="save-status" class="small text-muted"><i class="bi bi-check-circle"></i> 已保存</span>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('resume_view', resume_id=resume.id) }}" class="btn btn-sm btn-info" id="previewBtn"><i class="bi bi-eye"></i> 预览/导出 PDF</a>
+        <button type="button" class="btn btn-sm btn-primary" id="saveNowBtn"><i class="bi bi-save"></i> 立即保存</button>
+    </div>
+</div>
+
+<div class="row g-3">
+    <!-- 左侧：表单 -->
+    <div class="col-lg-7">
+        <!-- 简历标签（可选） -->
+        <div class="card mb-3">
+            <div class="card-header"><i class="bi bi-tag"></i> 简历标签（可选，便于多版本管理）</div>
+            <div class="card-body">
+                <div class="row g-2">
+                    <div class="col-md-6">
+                        <label class="form-label">目标公司</label>
+                        <input type="text" id="r-target-company" class="form-control" value="{{ resume.target_company }}" placeholder="如：字节跳动">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">目标岗位</label>
+                        <input type="text" id="r-target-role" class="form-control" value="{{ resume.target_role }}" placeholder="如：后端开发工程师">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 基本信息 -->
+        <div class="card mb-3">
+            <div class="card-header"><i class="bi bi-person-vcard"></i> 基本信息</div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <!-- 证件照 -->
+                    <div class="col-md-3">
+                        <label class="form-label">证件照</label>
+                        <div class="photo-uploader">
+                            <div class="photo-preview" id="photoPreview" data-shape="square">
+                                <img id="photoImg" style="display:none;" alt="证件照">
+                                <div class="photo-placeholder" id="photoPlaceholder">
+                                    <i class="bi bi-camera"></i>
+                                    <div class="small mt-1">点击上传</div>
+                                </div>
+                            </div>
+                            <input type="file" id="photoInput" accept="image/jpeg,image/png,image/webp" style="display:none;">
+                            <div class="d-flex gap-1 mt-2">
+                                <button type="button" class="btn btn-sm btn-outline-secondary flex-fill" id="photoUploadBtn">
+                                    <i class="bi bi-upload"></i> <span id="photoBtnText">上传</span>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-danger" id="photoDelBtn" style="display:none;" title="删除照片"><i class="bi bi-trash"></i></button>
+                            </div>
+                            <div class="btn-group btn-group-sm w-100 mt-1" role="group" aria-label="照片形状">
+                                <input type="radio" class="btn-check" name="photoShape" id="shapeSquare" value="square">
+                                <label class="btn btn-outline-secondary" for="shapeSquare" title="方形"><i class="bi bi-square"></i></label>
+                                <input type="radio" class="btn-check" name="photoShape" id="shapeRounded" value="rounded">
+                                <label class="btn btn-outline-secondary" for="shapeRounded" title="圆角"><i class="bi bi-app"></i></label>
+                                <input type="radio" class="btn-check" name="photoShape" id="shapeCircle" value="circle">
+                                <label class="btn btn-outline-secondary" for="shapeCircle" title="圆形"><i class="bi bi-circle"></i></label>
+                            </div>
+                            <small class="form-text d-block mt-1">jpg/png/webp · ≤8MB</small>
+                        </div>
+                    </div>
+                    <div class="col-md-9">
+                        <div class="row g-2">
+                            <div class="col-md-6"><label class="form-label">姓名</label><input class="form-control" data-bind="basics.name"></div>
+                            <div class="col-md-6"><label class="form-label">求职意向</label><input class="form-control" data-bind="basics.title" placeholder="如：后端开发"></div>
+                            <div class="col-md-6"><label class="form-label">手机</label><input class="form-control" data-bind="basics.phone"></div>
+                            <div class="col-md-6"><label class="form-label">邮箱</label><input class="form-control" data-bind="basics.email"></div>
+                            <div class="col-md-12"><label class="form-label">所在地</label><input class="form-control" data-bind="basics.location" placeholder="如：上海"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <label class="form-label d-flex justify-content-between align-items-center">
+                        链接（GitHub、博客等）
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="addLinkBtn"><i class="bi bi-plus"></i> 添加</button>
+                    </label>
+                    <div id="links-container"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 自我介绍 -->
+        <div class="card mb-3">
+            <div class="card-header"><i class="bi bi-card-text"></i> 自我介绍</div>
+            <div class="card-body">
+                <textarea class="form-control" data-bind="summary" rows="4" placeholder="简要介绍你的专业方向、核心技能、亮点经验，3-5 行最佳"></textarea>
+            </div>
+        </div>
+
+        <!-- 教育经历 -->
+        <div class="card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-mortarboard"></i> 教育经历</span>
+                <button type="button" class="btn btn-sm btn-outline-primary add-item-btn" data-key="education"><i class="bi bi-plus"></i> 添加</button>
+            </div>
+            <div class="card-body p-2" id="education-container"></div>
+        </div>
+
+        <!-- 工作经历 -->
+        <div class="card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-briefcase"></i> 工作经历</span>
+                <button type="button" class="btn btn-sm btn-outline-primary add-item-btn" data-key="experience"><i class="bi bi-plus"></i> 添加</button>
+            </div>
+            <div class="card-body p-2" id="experience-container"></div>
+        </div>
+
+        <!-- 项目经历 -->
+        <div class="card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-rocket-takeoff"></i> 项目经历</span>
+                <button type="button" class="btn btn-sm btn-outline-primary add-item-btn" data-key="projects"><i class="bi bi-plus"></i> 添加</button>
+            </div>
+            <div class="card-body p-2" id="projects-container"></div>
+        </div>
+
+        <!-- 技能 -->
+        <div class="card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-stars"></i> 技能</span>
+                <button type="button" class="btn btn-sm btn-outline-primary add-item-btn" data-key="skills"><i class="bi bi-plus"></i> 添加</button>
+            </div>
+            <div class="card-body p-2" id="skills-container"></div>
+        </div>
+
+        <!-- 奖项 -->
+        <div class="card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-trophy"></i> 奖项/证书</span>
+                <button type="button" class="btn btn-sm btn-outline-primary add-item-btn" data-key="awards"><i class="bi bi-plus"></i> 添加</button>
+            </div>
+            <div class="card-body p-2" id="awards-container"></div>
+        </div>
+    </div>
+
+    <!-- 右侧：实时预览 -->
+    <div class="col-lg-5">
+        <div class="card position-sticky" style="top:80px;">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-1 mb-2">
+                    <span><i class="bi bi-eye"></i> 实时预览
+                        <span id="page-warn" class="badge bg-warning ms-2" style="display:none;" title="内容超出 1 页"></span>
+                    </span>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="tplPanelToggle"><i class="bi bi-sliders"></i> 排版</button>
+                </div>
+                <div class="btn-group btn-group-sm tpl-switch" role="group">
+                    <button type="button" class="btn btn-outline-secondary tpl-mini-btn active" data-tpl="classic">经典</button>
+                    <button type="button" class="btn btn-outline-secondary tpl-mini-btn" data-tpl="modern">现代</button>
+                    <button type="button" class="btn btn-outline-secondary tpl-mini-btn" data-tpl="compact">紧凑</button>
+                    <button type="button" class="btn btn-outline-secondary tpl-mini-btn" data-tpl="timeline">时间线</button>
+                    <button type="button" class="btn btn-outline-secondary tpl-mini-btn" data-tpl="elegant">优雅</button>
+                    <button type="button" class="btn btn-outline-secondary tpl-mini-btn" data-tpl="minimal">极简</button>
+                    <button type="button" class="btn btn-outline-secondary tpl-mini-btn" data-tpl="academic">学术</button>
+                </div>
+                <!-- 排版调节面板 -->
+                <div id="tplPanel" class="tpl-panel mt-2" style="display:none;">
+                    <div class="row g-2">
+                        <div class="col-12">
+                            <label class="form-label small mb-1 d-flex justify-content-between">
+                                <span>字号</span><span id="lbl-font-size" class="text-muted">100%</span>
+                            </label>
+                            <input type="range" class="form-range" id="cfg-font-size" min="80" max="150" step="1" value="100">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small mb-1 d-flex justify-content-between">
+                                <span>行距</span><span id="lbl-line-height" class="text-muted">1.55</span>
+                            </label>
+                            <input type="range" class="form-range" id="cfg-line-height" min="1.0" max="2.8" step="0.05" value="1.55">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small mb-1 d-flex justify-content-between">
+                                <span>段落间距</span><span id="lbl-section-gap" class="text-muted">5mm</span>
+                            </label>
+                            <input type="range" class="form-range" id="cfg-section-gap" min="1" max="20" step="1" value="5">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small mb-1">字体</label>
+                            <select class="form-select form-select-sm" id="cfg-font-family">
+                                <option value="sans">无衬线（默认）</option>
+                                <option value="serif">英文衬线（Georgia）</option>
+                                <option value="songti">中文宋体</option>
+                                <option value="heiti">中文黑体</option>
+                                <option value="mono">等宽（Mono）</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small mb-1">页边距</label>
+                            <select class="form-select form-select-sm" id="cfg-page-margin">
+                                <option value="narrow">窄（8mm）</option>
+                                <option value="default" selected>默认（12mm）</option>
+                                <option value="wide">宽（16mm）</option>
+                            </select>
+                        </div>
+                        <div class="col-12 d-flex gap-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary flex-fill" id="styleResetBtn"><i class="bi bi-arrow-counterclockwise"></i> 恢复默认</button>
+                            <button type="button" class="btn btn-sm btn-outline-info flex-fill" id="styleAutoFitBtn" title="自动减小字号直到不超页"><i class="bi bi-magic"></i> 一键适配 1 页</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body resume-preview-mini" id="livePreviewWrap" style="height:78vh;">
+                <div class="resume-preview-scaler" id="livePreviewScaler"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script id="initial-data" type="application/json">{{ data | tojson }}</script>
+{% endblock %}
+
+{% block scripts %}
+<script>
+window.addEventListener('error', function(e){
+    console.error('[Resume]', e.error || e.message);
+    var s = document.getElementById('save-status');
+    if (s) { s.innerHTML = '<i class="bi bi-exclamation-triangle"></i> ' + (e.message || 'JS 错误'); s.style.color = '#ff4060'; }
+});
+
+const RESUME_ID = {{ resume.id }};
+let RESUME;
+try {
+    RESUME = JSON.parse(document.getElementById('initial-data').textContent);
+} catch(e) {
+    console.error('[Resume] parse fail', e);
+    RESUME = {basics:{name:'',links:[]}, summary:'', education:[], experience:[], projects:[], skills:[], awards:[]};
+}
+let saveTimer = null;
+const $ = (s, p=document) => p.querySelector(s);
+const SafeLocal = window.SafeLocal || localStorage;
+
+function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+}
+
+// ── 通用工具 ────────────────────────────────────────────
+function getByPath(obj, path) {
+    return path.split('.').reduce((o,k) => (o && o[k] !== undefined) ? o[k] : '', obj);
+}
+function setByPath(obj, path, val) {
+    const ks = path.split('.'); let o = obj;
+    for (let i=0;i<ks.length-1;i++) { if (!o[ks[i]]) o[ks[i]] = {}; o = o[ks[i]]; }
+    o[ks[ks.length-1]] = val;
+}
+function bindFields() {
+    document.querySelectorAll('[data-bind]').forEach(el => {
+        el.value = getByPath(RESUME, el.dataset.bind) || '';
+        el.addEventListener('input', () => { setByPath(RESUME, el.dataset.bind, el.value); scheduleSave(); schedulePreview(); });
+    });
+}
+
+// ── Links ───────────────────────────────────────────────
+function renderLinks() {
+    const c = $('#links-container'); c.innerHTML = '';
+    (RESUME.basics.links || []).forEach((lk, i) => {
+        const row = document.createElement('div');
+        row.className = 'd-flex gap-2 mb-2';
+        row.innerHTML = `
+            <input class="form-control form-control-sm" placeholder="标签 (GitHub)" value="${escapeHtml(lk.label||'')}" data-lf="label" data-li="${i}" style="max-width:140px;">
+            <input class="form-control form-control-sm" placeholder="https://..." value="${escapeHtml(lk.url||'')}" data-lf="url" data-li="${i}">
+            <button type="button" class="btn btn-sm btn-outline-danger del-link-btn" data-li="${i}"><i class="bi bi-x"></i></button>
+        `;
+        row.querySelectorAll('input').forEach(inp => {
+            inp.addEventListener('input', e => {
+                const i = +e.target.dataset.li, f = e.target.dataset.lf;
+                RESUME.basics.links[i][f] = e.target.value; scheduleSave(); schedulePreview();
+            });
+        });
+        row.querySelector('.del-link-btn').addEventListener('click', e => delLink(+e.currentTarget.dataset.li));
+        c.appendChild(row);
+    });
+}
+function addLink() {
+    if (!RESUME.basics.links) RESUME.basics.links = [];
+    RESUME.basics.links.push({label:'', url:''}); renderLinks(); scheduleSave(); schedulePreview();
+}
+function delLink(i) { RESUME.basics.links.splice(i,1); renderLinks(); scheduleSave(); schedulePreview(); }
+
+// ── 列表项 schema ────────────────────────────────────────
+const SCHEMAS = {
+    education: [
+        {f:'school', label:'学校', col:6},
+        {f:'major', label:'专业', col:6},
+        {f:'degree', label:'学历', col:4, placeholder:'本科 / 硕士'},
+        {f:'start', label:'起', col:4, placeholder:'2020.09'},
+        {f:'end', label:'止', col:4, placeholder:'2024.06'},
+        {f:'gpa', label:'GPA / 排名', col:12, optional:true},
+        {f:'description', label:'描述（课程、奖项等）', col:12, textarea:true, optional:true}
+    ],
+    experience: [
+        {f:'company', label:'公司', col:6},
+        {f:'title', label:'职位', col:6},
+        {f:'start', label:'起', col:4, placeholder:'2024.07'},
+        {f:'end', label:'止', col:4, placeholder:'至今'},
+        {f:'location', label:'地点', col:4, optional:true},
+        {f:'description', label:'职责（建议用 STAR 法则 + 量化数据）', col:12, textarea:true, rows:4}
+    ],
+    projects: [
+        {f:'name', label:'项目名', col:6},
+        {f:'role', label:'角色', col:6, placeholder:'后端 / 全栈'},
+        {f:'start', label:'起', col:4, placeholder:'2023.03'},
+        {f:'end', label:'止', col:4, placeholder:'2023.06'},
+        {f:'tech', label:'技术栈', col:4, placeholder:'Python / Flask'},
+        {f:'description', label:'项目描述', col:12, textarea:true, rows:3, placeholder:'项目背景、目标、整体方案'},
+        {f:'contribution', label:'个人贡献', col:12, textarea:true, rows:3, placeholder:'示例：\n- 负责后端架构设计与核心模块开发\n- 主导 X 算法落地，代码量 3000+ 行\n- 撰写技术文档与单元测试'},
+        {f:'achievements', label:'成果（量化数据 / 奖项 / 上线效果）', col:12, textarea:true, rows:3, optional:true, placeholder:'示例：\n- 上线后 DAU 提升 30%\n- 获团队季度最佳项目\n- 发表 SCI 论文一篇'}
+    ],
+    skills: [
+        {f:'category', label:'分类', col:4, placeholder:'编程语言 / 框架'},
+        {f:'items', label:'技能项（逗号分隔）', col:8, placeholder:'Python, Go, JavaScript'}
+    ],
+    awards: [
+        {f:'name', label:'奖项/证书', col:6},
+        {f:'date', label:'获得时间', col:6, placeholder:'2023.05'},
+        {f:'description', label:'说明（可选）', col:12, optional:true}
+    ]
+};
+
+function renderList(key) {
+    const c = $('#' + key + '-container'); c.innerHTML = '';
+    const arr = RESUME[key] || []; const schema = SCHEMAS[key];
+    arr.forEach((item, i) => {
+        const block = document.createElement('div');
+        block.className = 'mb-3 p-3 border rounded';
+        block.style.borderColor = 'var(--border)';
+        const fieldsHtml = schema.map(s => `
+            <div class="col-md-${s.col}">
+                <label class="form-label small mb-1">${escapeHtml(s.label)}${s.optional?' <span class="text-muted">(可选)</span>':''}</label>
+                ${s.textarea
+                    ? `<textarea class="form-control form-control-sm" rows="${s.rows||2}" data-key="${key}" data-i="${i}" data-f="${s.f}" placeholder="${escapeHtml(s.placeholder||'')}">${escapeHtml(item[s.f]||'')}</textarea>`
+                    : `<input class="form-control form-control-sm" data-key="${key}" data-i="${i}" data-f="${s.f}" placeholder="${escapeHtml(s.placeholder||'')}" value="${escapeHtml(item[s.f]||'')}">`
+                }
+            </div>`).join('');
+        const actionsHtml = `
+            <div class="d-flex gap-1 mt-2 justify-content-end">
+                <button type="button" class="btn btn-sm btn-link text-muted" data-act="up" data-key="${key}" data-i="${i}"><i class="bi bi-arrow-up"></i></button>
+                <button type="button" class="btn btn-sm btn-link text-muted" data-act="down" data-key="${key}" data-i="${i}"><i class="bi bi-arrow-down"></i></button>
+                <button type="button" class="btn btn-sm btn-link text-danger" data-act="del" data-key="${key}" data-i="${i}"><i class="bi bi-trash"></i> 删除</button>
+            </div>`;
+        block.innerHTML = '<div class="row g-2">' + fieldsHtml + '</div>' + actionsHtml;
+        block.querySelectorAll('[data-key]:not(button)').forEach(inp => {
+            inp.addEventListener('input', e => {
+                const k = e.target.dataset.key, i = +e.target.dataset.i, f = e.target.dataset.f;
+                RESUME[k][i][f] = e.target.value; schedulePreview(); scheduleSave();
+            });
+        });
+        block.querySelectorAll('button[data-act]').forEach(btn => {
+            btn.addEventListener('click', e => {
+                const t = e.currentTarget;
+                const k = t.dataset.key, i = +t.dataset.i, act = t.dataset.act;
+                if (act === 'del') delItem(k, i);
+                else moveItem(k, i, act === 'up' ? -1 : 1);
+            });
+        });
+        c.appendChild(block);
+    });
+}
+function addItem(key) {
+    if (!RESUME[key]) RESUME[key] = [];
+    const empty = {}; SCHEMAS[key].forEach(s => empty[s.f] = '');
+    RESUME[key].push(empty); renderList(key); schedulePreview(); scheduleSave();
+}
+function delItem(key, i) {
+    if (!confirm('确定删除？')) return;
+    RESUME[key].splice(i, 1); renderList(key); schedulePreview(); scheduleSave();
+}
+function moveItem(key, i, dir) {
+    const arr = RESUME[key]; const j = i + dir;
+    if (j < 0 || j >= arr.length) return;
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+    renderList(key); schedulePreview(); scheduleSave();
+}
+
+// ── 自动保存 ────────────────────────────────────────────
+function scheduleSave() {
+    clearTimeout(saveTimer); saveTimer = setTimeout(saveResume, 1200);
+    setStatus('saving', '正在保存...');
+}
+function setStatus(state, text) {
+    const s = $('#save-status');
+    const icons = {saving:'arrow-clockwise', saved:'check-circle', error:'exclamation-circle'};
+    s.innerHTML = `<i class="bi bi-${icons[state]||'check-circle'}"></i> ${text}`;
+    s.style.color = state==='error' ? 'var(--red)' : 'var(--text-muted)';
+}
+async function saveResume() {
+    const payload = {
+        title: $('#r-title').value,
+        target_company: $('#r-target-company').value,
+        target_role: $('#r-target-role').value,
+        data: RESUME
+    };
+    try {
+        const r = await fetch(window.location.pathname, {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify(payload)
+        });
+        const d = await r.json();
+        if (d.ok) setStatus('saved', '已保存 ' + (d.updated_at||''));
+        else setStatus('error', '保存失败');
+    } catch(e) { setStatus('error', '网络错误'); }
+}
+
+// ── 证件照 ──────────────────────────────────────────────
+function photoUrl(rel) {
+    if (!rel) return '';
+    if (rel.startsWith('http')) return rel;
+    return `/resume/${RESUME_ID}/photo/` + rel.replace(/^resume_photos\//,'');
+}
+function refreshPhotoUI() {
+    const rel = RESUME.basics.photo || '';
+    const shape = RESUME.basics.photo_shape || 'square';
+    const img = $('#photoImg'), ph = $('#photoPlaceholder'), del = $('#photoDelBtn'), txt = $('#photoBtnText');
+    $('#photoPreview').dataset.shape = shape;
+    if (rel) {
+        img.src = photoUrl(rel) + '?t=' + Date.now();
+        img.style.display = 'block'; ph.style.display = 'none';
+        del.style.display = 'inline-block'; txt.textContent = '更换';
+    } else {
+        img.removeAttribute('src'); img.style.display = 'none'; ph.style.display = 'flex';
+        del.style.display = 'none'; txt.textContent = '上传';
+    }
+    document.querySelectorAll('[name=photoShape]').forEach(r => r.checked = (r.value === shape));
+}
+async function uploadPhoto(file) {
+    if (!file) return;
+    if (file.size > 8 * 1024 * 1024) { alert('图片过大（>8MB）'); return; }
+    const fd = new FormData(); fd.append('photo', file); fd.append('shape', RESUME.basics.photo_shape || 'square');
+    setStatus('saving','正在上传照片...');
+    try {
+        const r = await fetch(`/resume/${RESUME_ID}/photo`, { method:'POST', body:fd });
+        const d = await r.json();
+        if (!d.ok) { alert(d.error || '上传失败'); setStatus('error','上传失败'); return; }
+        RESUME.basics.photo = d.photo; RESUME.basics.photo_shape = d.shape;
+        refreshPhotoUI(); schedulePreview(); setStatus('saved','已保存');
+    } catch(e) { alert('网络错误'); setStatus('error','网络错误'); }
+}
+async function deletePhoto() {
+    if (!confirm('删除照片？')) return;
+    try {
+        const r = await fetch(`/resume/${RESUME_ID}/photo/delete`, { method:'POST' });
+        const d = await r.json();
+        if (d.ok) { RESUME.basics.photo = ''; refreshPhotoUI(); schedulePreview(); setStatus('saved','已保存'); }
+    } catch(e) { alert('网络错误'); }
+}
+async function setShape(shape) {
+    RESUME.basics.photo_shape = shape; refreshPhotoUI(); schedulePreview();
+    try { await fetch(`/resume/${RESUME_ID}/photo/shape`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({shape}) }); } catch(e){}
+}
+
+// ── 排版样式（字号/行距/字体/边距） ─────────────────────
+const FONT_FAMILIES = {
+    sans: "'Inter','PingFang SC','Microsoft YaHei','Noto Sans SC',sans-serif",
+    serif: "Georgia,'Times New Roman','宋体',serif",
+    songti: "'宋体','SimSun','Songti SC',serif",
+    heiti: "'黑体','SimHei','Heiti SC',sans-serif",
+    mono: "'JetBrains Mono','SF Mono','Consolas',monospace"
+};
+const PAGE_MARGINS = { narrow:'8mm 8mm', default:'12mm 12mm', wide:'16mm 16mm' };
+function applyStyle(rootEl) {
+    if (!rootEl) return;
+    const s = RESUME.style || {};
+    const fontPct = +s.font_size || 100;
+    rootEl.style.setProperty('--rd-font-size', (10.5 * fontPct / 100).toFixed(2) + 'pt');
+    rootEl.style.setProperty('--rd-line-height', s.line_height || 1.55);
+    rootEl.style.setProperty('--rd-section-gap', (s.section_gap || 5) + 'mm');
+    const pm = PAGE_MARGINS[s.page_margin || 'default'].split(' ');
+    rootEl.style.setProperty('--rd-padding-y', pm[0]);
+    rootEl.style.setProperty('--rd-padding-x', pm[1]);
+    if (s.font_family && s.font_family !== 'sans') {
+        rootEl.style.setProperty('--rd-font-family', FONT_FAMILIES[s.font_family] || FONT_FAMILIES.sans);
+    } else {
+        rootEl.style.removeProperty('--rd-font-family');
+    }
+}
+function syncStylePanel() {
+    const s = RESUME.style || {};
+    const fs = +s.font_size || 100;
+    const lh = +s.line_height || 1.55;
+    const sg = +s.section_gap || 5;
+    $('#cfg-font-size').value = fs;       $('#lbl-font-size').textContent = fs + '%';
+    $('#cfg-line-height').value = lh;     $('#lbl-line-height').textContent = lh.toFixed(2);
+    $('#cfg-section-gap').value = sg;     $('#lbl-section-gap').textContent = sg + 'mm';
+    $('#cfg-font-family').value = s.font_family || 'sans';
+    $('#cfg-page-margin').value = s.page_margin || 'default';
+}
+// 测量真实内容高度：用 measuring-mode class 强制 min-height:0 !important
+function measureContentHeight() {
+    const doc = $('#livePreviewScaler .resume-doc');
+    if (!doc) return 0;
+    doc.classList.add('measuring-mode');
+    // 强制 reflow
+    void doc.getBoundingClientRect();
+    const h = doc.offsetHeight;
+    doc.classList.remove('measuring-mode');
+    return h;
+}
+function checkPageOverflow() {
+    const warn = $('#page-warn');
+    if (!warn) return;
+    const h = measureContentHeight();
+    const a4 = 297 * 3.7795;
+    if (h > a4 + 2) {
+        const pages = Math.ceil(h / a4);
+        warn.style.display = 'inline-block';
+        warn.textContent = `超 ${pages} 页`;
+        warn.title = `内容 ${Math.round(h)}px / A4 ${Math.round(a4)}px`;
+    } else {
+        warn.style.display = 'none';
+    }
+}
+
+// ── 实时预览（结构与导出页一致） ────────────────────────
+let previewTimer = null;
+let currentMiniTpl = SafeLocal.getItem('resume-tpl') || 'classic';
+
+function schedulePreview() {
+    clearTimeout(previewTimer);
+    previewTimer = setTimeout(renderPreview, 200);
+}
+function fitPreview() {
+    try {
+        const wrap = $('#livePreviewWrap');
+        const scaler = $('#livePreviewScaler');
+        if (!wrap || !scaler) return;
+        const A4_PX = 210 * 3.7795;
+        const w = wrap.clientWidth - 16;
+        if (w <= 0) return;
+        const ratio = Math.max(0.1, Math.min(1, w / A4_PX));
+        scaler.style.transform = 'scale(' + ratio + ')';
+        scaler.style.width = A4_PX + 'px';
+        const inner = scaler.querySelector('.resume-doc');
+        if (inner) scaler.style.height = (inner.getBoundingClientRect().height * ratio) + 'px';
+    } catch(e) { console.warn('fitPreview', e); }
+}
+function buildSkillsHtml(skills) {
+    const filled = (skills||[]).filter(s => s && s.items);
+    if (!filled.length) return '';
+    return '<section class="rp-section rp-skills"><h2>技能</h2><div class="rp-skill-grid">' +
+        filled.map(s => `
+            <div class="rp-skill-cat">${escapeHtml(s.category||'')}</div>
+            <div class="rp-skill-val">${escapeHtml(s.items||'')}</div>
+        `).join('') +
+        '</div></section>';
+}
+function renderPreview() {
+    const scaler = $('#livePreviewScaler');
+    const d = RESUME;
+    const b = d.basics || {};
+    const linksHtml = (b.links||[]).filter(l=>l.url).map(l=>`<span><a href="${escapeHtml(l.url)}">${escapeHtml(l.label||l.url)}</a></span>`).join('');
+    const photoHtml = b.photo ? `<img class="rp-photo rp-photo-${b.photo_shape||'square'}" src="${photoUrl(b.photo)}" alt="">` : '';
+    const sectionHtml = (clazz, title, items, fmt) => {
+        const arr = (items||[]).filter(it => Object.values(it).some(v=>v));
+        if (!arr.length) return '';
+        return `<section class="rp-section ${clazz}"><h2>${title}</h2>${arr.map(fmt).join('')}</section>`;
+    };
+    scaler.innerHTML = `
+        <div class="resume-doc tpl-${currentMiniTpl}">
+            <header class="rp-header ${b.photo ? 'rp-has-photo':''}">
+                ${photoHtml}
+                <div class="rp-header-text">
+                    <h1>${escapeHtml(b.name||'你的名字')}</h1>
+                    ${b.title ? `<div class="rp-subtitle">${escapeHtml(b.title)}</div>`:''}
+                    <div class="rp-meta">
+                        ${b.phone?`<span><i class="bi bi-telephone"></i> ${escapeHtml(b.phone)}</span>`:''}
+                        ${b.email?`<span><i class="bi bi-envelope"></i> ${escapeHtml(b.email)}</span>`:''}
+                        ${b.location?`<span><i class="bi bi-geo-alt"></i> ${escapeHtml(b.location)}</span>`:''}
+                        ${linksHtml}
+                    </div>
+                </div>
+            </header>
+            ${d.summary ? `<section class="rp-section rp-summary"><h2>个人简介</h2><p>${escapeHtml(d.summary).replace(/\n/g,'<br>')}</p></section>`:''}
+            ${sectionHtml('rp-education', '教育经历', d.education, e => `
+                <div class="rp-item">
+                    <div class="rp-row"><strong>${escapeHtml(e.school||'')}</strong><span>${escapeHtml(e.start||'')} - ${escapeHtml(e.end||'')}</span></div>
+                    ${(e.degree||e.major||e.gpa)?`<div class="rp-row"><span>${escapeHtml(e.degree||'')}${e.major?' · '+escapeHtml(e.major):''}</span><span>${escapeHtml(e.gpa||'')}</span></div>`:''}
+                    ${e.description?`<div class="rp-desc">${escapeHtml(e.description).replace(/\n/g,'<br>')}</div>`:''}
+                </div>`)}
+            ${sectionHtml('rp-experience', '工作经历', d.experience, e => `
+                <div class="rp-item">
+                    <div class="rp-row"><strong>${escapeHtml(e.company||'')}${e.title?' · '+escapeHtml(e.title):''}</strong><span>${escapeHtml(e.start||'')} - ${escapeHtml(e.end||'')}</span></div>
+                    ${e.location?`<div class="rp-row rp-row-muted"><span>${escapeHtml(e.location)}</span></div>`:''}
+                    ${e.description?`<div class="rp-desc">${escapeHtml(e.description).replace(/\n/g,'<br>')}</div>`:''}
+                </div>`)}
+            ${sectionHtml('rp-projects', '项目经历', d.projects, p => `
+                <div class="rp-item">
+                    <div class="rp-row"><strong>${escapeHtml(p.name||'')}${p.role?' · '+escapeHtml(p.role):''}</strong><span>${escapeHtml(p.start||'')} - ${escapeHtml(p.end||'')}</span></div>
+                    ${p.tech?`<div class="rp-row rp-row-muted"><span>技术栈：${escapeHtml(p.tech)}</span></div>`:''}
+                    ${p.description?`<div class="rp-desc"><span class="rp-desc-label">描述：</span>${escapeHtml(p.description).replace(/\n/g,'<br>')}</div>`:''}
+                    ${p.contribution?`<div class="rp-desc rp-contribution"><span class="rp-desc-label">个人贡献：</span>${escapeHtml(p.contribution).replace(/\n/g,'<br>')}</div>`:''}
+                    ${p.achievements?`<div class="rp-desc rp-achievements"><span class="rp-desc-label">成果：</span>${escapeHtml(p.achievements).replace(/\n/g,'<br>')}</div>`:''}
+                </div>`)}
+            ${buildSkillsHtml(d.skills)}
+            ${sectionHtml('rp-awards', '奖项 / 证书', d.awards, a => `
+                <div class="rp-item">
+                    <div class="rp-row"><strong>${escapeHtml(a.name||'')}</strong><span>${escapeHtml(a.date||'')}</span></div>
+                    ${a.description?`<div class="rp-desc">${escapeHtml(a.description)}</div>`:''}
+                </div>`)}
+        </div>
+    `;
+    const docEl = scaler.querySelector('.resume-doc');
+    applyStyle(docEl);
+    requestAnimationFrame(() => { fitPreview(); checkPageOverflow(); });
+}
+window.addEventListener('resize', fitPreview);
+
+// 模板切换
+function syncTplButtons() {
+    document.querySelectorAll('.tpl-mini-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.tpl === currentMiniTpl);
+    });
+}
+document.querySelectorAll('.tpl-mini-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        currentMiniTpl = btn.dataset.tpl;
+        SafeLocal.setItem('resume-tpl', currentMiniTpl);
+        syncTplButtons();
+        renderPreview();
+    });
+});
+syncTplButtons();
+
+// ── 按钮事件绑定 ────────────────────────────────────────
+document.getElementById('saveNowBtn').addEventListener('click', saveResume);
+document.getElementById('addLinkBtn').addEventListener('click', addLink);
+document.querySelectorAll('.add-item-btn').forEach(b => b.addEventListener('click', e => addItem(e.currentTarget.dataset.key)));
+document.getElementById('photoInput').addEventListener('change', e => { if (e.target.files[0]) uploadPhoto(e.target.files[0]); e.target.value = ''; });
+document.getElementById('photoPreview').addEventListener('click', () => document.getElementById('photoInput').click());
+document.getElementById('photoUploadBtn').addEventListener('click', () => document.getElementById('photoInput').click());
+document.getElementById('photoDelBtn').addEventListener('click', deletePhoto);
+document.querySelectorAll('[name=photoShape]').forEach(r => r.addEventListener('change', e => setShape(e.target.value)));
+['r-title','r-target-company','r-target-role'].forEach(id => {
+    document.getElementById(id).addEventListener('input', scheduleSave);
+});
+
+// ── 排版调节面板 ───────────────────────────────────────
+const tplPanelToggle = document.getElementById('tplPanelToggle');
+const tplPanel = document.getElementById('tplPanel');
+if (tplPanelToggle) tplPanelToggle.addEventListener('click', () => {
+    tplPanel.style.display = (tplPanel.style.display === 'none' ? 'block' : 'none');
+});
+function bindStyleControl(id, key, parser, fmt) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('input', () => {
+        if (!RESUME.style) RESUME.style = {};
+        RESUME.style[key] = parser(el.value);
+        if (fmt) {
+            const lbl = document.getElementById('lbl-' + id.replace('cfg-',''));
+            if (lbl) lbl.textContent = fmt(el.value);
+        }
+        scheduleSave(); schedulePreview();
+    });
+}
+bindStyleControl('cfg-font-size', 'font_size', v => +v, v => v + '%');
+bindStyleControl('cfg-line-height', 'line_height', v => +v, v => (+v).toFixed(2));
+bindStyleControl('cfg-section-gap', 'section_gap', v => +v, v => v + 'mm');
+bindStyleControl('cfg-font-family', 'font_family', v => v);
+bindStyleControl('cfg-page-margin', 'page_margin', v => v);
+
+document.getElementById('styleResetBtn').addEventListener('click', () => {
+    RESUME.style = { font_size:100, line_height:1.55, section_gap:5, page_margin:'default', font_family:'sans' };
+    syncStylePanel(); scheduleSave(); schedulePreview();
+});
+document.getElementById('styleAutoFitBtn').addEventListener('click', async () => {
+    if (!RESUME.style) RESUME.style = {};
+    const btn = document.getElementById('styleAutoFitBtn');
+    btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> 适配中...';
+    const A4 = 297 * 3.7795;
+    const TARGET = A4 - 4;
+    const FILL_MIN = A4 * 0.96;
+    const wait2 = () => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+    const measure = async () => {
+        renderPreview(); await wait2();
+        return measureContentHeight();
+    };
+
+    // Step 0: 重置 line_height / section_gap 基准
+    RESUME.style.line_height = 1.55;
+    RESUME.style.section_gap = 5;
+
+    // Step 1: 二分搜索字号 80-150（找最大可行值）
+    let lo = 80, hi = 151;
+    while (hi - lo > 1) {
+        const mid = (lo + hi) >> 1;
+        RESUME.style.font_size = mid;
+        const mh = await measure();
+        if (mh <= TARGET) lo = mid; else hi = mid;
+    }
+    RESUME.style.font_size = lo;
+    let h = await measure();
+
+    if (h > TARGET) {
+        // 字号已最小仍超页 → 缩行距 / 段距
+        let lh_lo = 110, lh_hi = 155;
+        while (lh_hi - lh_lo > 5) {
+            const m = ((lh_lo + lh_hi) / 2) | 0;
+            RESUME.style.line_height = m / 100;
+            const mh = await measure();
+            if (mh <= TARGET) lh_lo = m; else lh_hi = m;
+        }
+        RESUME.style.line_height = lh_lo / 100;
+        h = await measure();
+        if (h > TARGET) {
+            for (let g = 5; g >= 1; g--) {
+                RESUME.style.section_gap = g; h = await measure();
+                if (h <= TARGET) break;
+            }
+        }
+    } else if (h < FILL_MIN) {
+        // 内容偏短 → 涨行距
+        let lh_lo = 155, lh_hi = 280;
+        while (lh_hi - lh_lo > 5) {
+            const m = ((lh_lo + lh_hi) / 2) | 0;
+            RESUME.style.line_height = m / 100;
+            const mh = await measure();
+            if (mh <= TARGET) lh_lo = m; else lh_hi = m;
+        }
+        RESUME.style.line_height = lh_lo / 100;
+        h = await measure();
+
+        // 还没填满 → 涨段距 5-20mm
+        if (h < FILL_MIN) {
+            let sg_lo = 5, sg_hi = 21;
+            while (sg_hi - sg_lo > 1) {
+                const m = (sg_lo + sg_hi) >> 1;
+                RESUME.style.section_gap = m;
+                const mh = await measure();
+                if (mh <= TARGET) sg_lo = m; else sg_hi = m;
+            }
+            RESUME.style.section_gap = sg_lo;
+            h = await measure();
+        }
+    }
+
+    syncStylePanel(); scheduleSave();
+    btn.disabled = false; btn.innerHTML = '<i class="bi bi-magic"></i> 一键适配 1 页';
+});
+syncStylePanel();
+
+// ── 初始化 ──────────────────────────────────────────────
+bindFields();
+renderLinks();
+['education','experience','projects','skills','awards'].forEach(renderList);
+refreshPhotoUI();
+renderPreview();
+setTimeout(fitPreview, 100);
+</script>
+{% endblock %}

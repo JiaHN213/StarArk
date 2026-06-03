@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}{{ '全部代码' if current_user.is_super_admin else '我的代码' }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">
+        <i class="bi bi-code-slash"></i>
+        {{ '全部代码' if current_user.is_super_admin else '我的代码' }}
+    </h2>
+    <a href="{{ url_for('code_create') }}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> 新建代码</a>
+</div>
+
+{% if snippets %}
+<div class="row g-3">
+    {% for s in snippets %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center py-2">
+                <a href="{{ url_for('code_edit', snippet_id=s.id) }}" class="text-decoration-none fw-semibold text-truncate me-2">{{ s.title }}</a>
+                <span class="badge {% if s.is_shared %}bg-success{% else %}bg-secondary{% endif %} flex-shrink-0">
+                    {{ '共享' if s.is_shared else '私有' }}
+                </span>
+            </div>
+            <div class="card-body p-2">
+                <pre class="mb-2 rounded" style="max-height:160px;overflow:hidden;font-size:0.78rem;background:var(--bg-deep);padding:0.75rem;"><code class="language-{{ s.language }}">{{ s.content[:400] }}</code></pre>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-info code-language-badge">{{ s.language }}</span>
+                        {% if current_user.is_super_admin and s.user_id != current_user.id %}
+                        <small class="text-muted"><i class="bi bi-person"></i> {{ s.author.username }}</small>
+                        {% endif %}
+                    </div>
+                    <small class="text-muted">{{ s.updated_at | format_time }}</small>
+                </div>
+            </div>
+            <div class="card-footer py-1 px-2">
+                <div class="d-flex gap-1">
+                    <a href="{{ url_for('code_view', snippet_id=s.id) }}" class="btn btn-outline-info btn-sm py-0 px-2" title="查看">
+                        <i class="bi bi-eye"></i>
+                    </a>
+                    <a href="{{ url_for('code_edit', snippet_id=s.id) }}" class="btn btn-outline-primary btn-sm py-0 px-2" title="编辑">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                    <form method="POST" action="{{ url_for('code_toggle_share', snippet_id=s.id) }}" class="d-inline">
+                        <button class="btn btn-outline-{% if s.is_shared %}warning{% else %}success{% endif %} btn-sm py-0 px-2"
+                                title="{{ '取消共享' if s.is_shared else '共享' }}">
+                            <i class="bi bi-{% if s.is_shared %}eye-slash{% else %}eye{% endif %}"></i>
+                        </button>
+                    </form>
+                    <form method="POST" action="{{ url_for('code_delete', snippet_id=s.id) }}" class="d-inline ms-auto"
+                          onsubmit="return confirm('确定删除？')">
+                        <button class="btn btn-outline-danger btn-sm py-0 px-2" title="删除">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-5">
+    <i class="bi bi-code-slash display-1 text-muted"></i>
+    <p class="text-muted mt-3">还没有代码片段。</p>
+    <a href="{{ url_for('code_create') }}" class="btn btn-primary mt-2"><i class="bi bi-plus-lg"></i> 创建第一个</a>
+</div>
+{% endif %}
+{% endblock %}
+{% block scripts %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/atom-one-dark.min.css">
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
+<script>
+document.querySelectorAll('pre code').forEach(function(block) { hljs.highlightElement(block); });
+</script>
+{% endblock %}

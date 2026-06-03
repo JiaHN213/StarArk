@@ -1,0 +1,144 @@
+<!-- AI Chat Widget — include on pages that need AI assistant -->
+<style>
+.ai-chat-toggle {
+    position: fixed; right: 1.2rem;     bottom: 20rem; z-index: 1050;
+    width: 42px; height: 42px; border-radius: 50%;
+    background: linear-gradient(135deg, #00b8d4, #0091ea);
+    border: none; color: #fff; font-size: 1.1rem; cursor: pointer;
+    box-shadow: 0 4px 14px rgba(0,180,220,0.3);
+    transition: all 0.3s; display: flex; align-items: center; justify-content: center;
+}
+.ai-chat-toggle:hover { transform: scale(1.1); box-shadow: 0 0 24px rgba(0,180,220,0.5); }
+.ai-chat-panel {
+    position: fixed; right: 0; top: 0; width: 380px; max-width: 90vw; height: 100vh;
+    background: var(--bg-card); border-left: 1px solid var(--border-glow);
+    z-index: 1060; display: flex; flex-direction: column;
+    transform: translateX(100%); transition: transform 0.3s ease;
+    box-shadow: -4px 0 30px rgba(0,0,0,0.3);
+}
+.ai-chat-panel.open { transform: translateX(0); }
+.ai-chat-header {
+    padding: 0.8rem 1rem; border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+    background: var(--bg-elevated);
+}
+.ai-chat-header strong { color: var(--cyan); font-size: 0.95rem; }
+.ai-chat-messages {
+    flex: 1; overflow-y: auto; padding: 0.8rem;
+    display: flex; flex-direction: column; gap: 0.6rem;
+}
+.ai-msg {
+    max-width: 85%; padding: 0.6rem 0.8rem; border-radius: 0.8rem;
+    font-size: 0.84rem; line-height: 1.5; word-break: break-word;
+}
+.ai-msg.user { align-self: flex-end; background: linear-gradient(135deg, #7c3aed, #5a20c0); color: #fff; }
+.ai-msg.assistant { align-self: flex-start; background: var(--bg-elevated); color: var(--text); border: 1px solid var(--border); }
+.ai-msg.assistant pre { background: var(--bg-deep); padding: 0.5rem; border-radius: 0.3rem; overflow-x: auto; font-size: 0.78rem; margin: 0.3rem 0; }
+.ai-msg.assistant code { font-size: 0.82em; }
+.ai-msg.assistant ul, .ai-msg.assistant ol { padding-left: 1.2rem; margin: 0.3rem 0; }
+.ai-msg.assistant p { margin: 0.3rem 0; }
+.ai-msg.assistant h1,.ai-msg.assistant h2,.ai-msg.assistant h3 { font-size: 0.95rem; margin: 0.4rem 0; }
+.ai-msg.assistant table { font-size: 0.78rem; width: 100%; }
+.ai-msg.assistant th,.ai-msg.assistant td { border: 1px solid var(--border); padding: 0.2rem 0.4rem; }
+.ai-msg.assistant blockquote { border-left: 2px solid var(--purple); padding-left: 0.5rem; margin: 0.3rem 0; opacity: 0.85; }
+.ai-chat-input {
+    padding: 0.6rem; border-top: 1px solid var(--border); display: flex; gap: 0.4rem;
+}
+.ai-chat-input textarea {
+    flex: 1; background: var(--bg-deep); border: 1px solid var(--border);
+    color: var(--text); border-radius: 0.4rem; padding: 0.5rem;
+    font-size: 0.82rem; resize: none; min-height: 40px; max-height: 100px;
+}
+.ai-chat-input textarea:focus { outline: none; border-color: var(--cyan); }
+.ai-chat-input button {
+    background: linear-gradient(135deg, #00b8d4, #0091ea); border: none;
+    color: #fff; border-radius: 0.4rem; padding: 0 0.8rem; cursor: pointer;
+}
+.ai-typing { color: var(--text-muted); font-size: 0.78rem; padding: 0.3rem 0.8rem; }
+@media (max-width: 480px) { .ai-chat-panel { width: 100vw; } }
+</style>
+
+<button class="ai-chat-toggle" id="aiChatToggle" onclick="toggleAiChat()" title="AI 助手">
+    <i class="bi bi-robot"></i>
+</button>
+
+<div class="ai-chat-panel" id="aiChatPanel">
+    <div class="ai-chat-header">
+        <strong><i class="bi bi-robot me-1"></i>AI 助手</strong>
+        <div class="d-flex gap-1">
+            <button class="btn btn-sm btn-outline-secondary py-0 px-1" onclick="clearAiChat()" title="清空"><i class="bi bi-arrow-repeat"></i></button>
+            <button class="btn btn-sm btn-outline-secondary py-0 px-1" onclick="toggleAiChat()" title="关闭"><i class="bi bi-x-lg"></i></button>
+        </div>
+    </div>
+    <div class="ai-chat-messages" id="aiMessages">
+        <div class="ai-msg assistant">你好！我是 AI 助手。可以帮你分析文档、解答代码问题、辅助写作。直接提问即可。</div>
+    </div>
+    <div class="ai-chat-input">
+        <textarea id="aiInput" rows="1" placeholder="输入问题..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAiMessage();}"></textarea>
+        <button onclick="sendAiMessage()"><i class="bi bi-send"></i></button>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+var aiContext = '{{ ai_context | default("general") }}';
+var aiPageContent = {{ ai_page_content | default("''") | tojson }};
+var aiMessages = [];
+
+function toggleAiChat() {
+    document.getElementById('aiChatPanel').classList.toggle('open');
+    if (document.getElementById('aiChatPanel').classList.contains('open')) {
+        setTimeout(function(){ document.getElementById('aiInput').focus(); }, 400);
+    }
+}
+
+function clearAiChat() {
+    aiMessages = [];
+    document.getElementById('aiMessages').innerHTML = '<div class="ai-msg assistant">对话已清空，可以开始新话题。</div>';
+}
+
+function addMessage(role, content) {
+    var div = document.createElement('div');
+    div.className = 'ai-msg ' + role;
+    if (role === 'assistant') {
+        div.innerHTML = marked.parse(content);
+    } else {
+        div.textContent = content;
+    }
+    document.getElementById('aiMessages').appendChild(div);
+    document.getElementById('aiMessages').scrollTop = document.getElementById('aiMessages').scrollHeight;
+}
+
+function sendAiMessage() {
+    var input = document.getElementById('aiInput');
+    var text = input.value.trim();
+    if (!text) return;
+    input.value = ''; input.style.height = 'auto';
+    addMessage('user', text);
+    aiMessages.push({role:'user', content:text});
+
+    var typing = document.createElement('div');
+    typing.className = 'ai-typing'; typing.textContent = '思考中...';
+    document.getElementById('aiMessages').appendChild(typing);
+    document.getElementById('aiMessages').scrollTop = document.getElementById('aiMessages').scrollHeight;
+
+    fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({messages: aiMessages, context: aiContext, page_content: aiPageContent})
+    })
+    .then(function(r){return r.json();})
+    .then(function(d){
+        typing.remove();
+        if (d.error) { addMessage('assistant', 'Error: ' + d.error); }
+        else {
+            addMessage('assistant', d.reply);
+            aiMessages.push({role:'assistant', content:d.reply});
+        }
+    })
+    .catch(function(e){
+        typing.remove();
+        addMessage('assistant', 'Request failed: ' + e.message);
+    });
+}
+</script>

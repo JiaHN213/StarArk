@@ -1,0 +1,45 @@
+# ── 用户数据（绝不提交）─────────────────────────
+# 含 data.db（所有账号/笔记/代码/博客）、uploads/（每个用户的文件）、
+# deepseek_key.txt（API 密钥）
+user_data/
+
+# ── Python ──────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# ── 虚拟环境 ────────────────────────────────────
+.venv/
+venv/
+env/
+ENV/
+agent-env/
+
+# ── 环境变量 / 密钥 ─────────────────────────────
+.env
+.env.*
+*.key
+
+# ── IDE / 编辑器 ────────────────────────────────
+.idea/
+.vscode/
+.claude/
+*.swp
+*.swo
+
+# ── 操作系统 ────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── 临时测试文件 ────────────────────────────────
+_test*.py
+_safe*.py
+tmp_test*.py
+_v*.py
+_t*.py
+_p*.py

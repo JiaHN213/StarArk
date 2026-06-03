@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block title %}共享广场{% endblock %}
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-globe2"></i> 共享广场</h2>
+
+{% if site_guide %}
+<div class="card shadow-sm mb-4 border-info">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-book me-2"></i><strong>{{ site_name }} 使用指南</strong></span>
+        <button class="btn btn-outline-secondary btn-sm py-0 px-2" onclick="document.getElementById('guideBody').classList.toggle('d-none')">
+            <i class="bi bi-chevron-down" id="guideToggle"></i>
+        </button>
+    </div>
+    <div class="card-body d-none" id="guideBody">
+        <div class="markdown-body">{{ site_guide | markdown | safe }}</div>
+    </div>
+</div>
+<script>
+document.getElementById('guideBody').previousElementSibling.querySelector('button').addEventListener('click', function(){
+    var icon = this.querySelector('i');
+    var body = document.getElementById('guideBody');
+    if (body.classList.contains('d-none')) { icon.className = 'bi bi-chevron-up'; }
+    else { icon.className = 'bi bi-chevron-down'; }
+});
+</script>
+{% endif %}
+
+<p class="text-muted mb-4">浏览全站用户共享的笔记、代码、文件和博客。</p>
+
+{% if not shared_notes and not shared_files and not public_posts and not shared_snippets %}
+<div class="text-center py-5">
+    <i class="bi bi-globe display-1 text-muted"></i>
+    <p class="text-muted mt-3">共享广场暂时空空如也，去共享一些内容吧！</p>
+</div>
+{% endif %}
+
+{% if shared_notes %}
+<h4 class="mb-3"><i class="bi bi-journal-text"></i> 共享笔记</h4>
+<div class="row g-3 mb-4">
+    {% for note in shared_notes %}
+    <div class="col-md-6">
+        <a href="{{ url_for('note_view', note_id=note.id) }}" class="text-decoration-none">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">{{ note.title }}</h5>
+                <p class="text-muted small">
+                    <i class="bi bi-person"></i> {{ note.author.username }} ·
+                    <i class="bi bi-clock"></i> {{ note.updated_at | format_time }}
+                </p>
+                <div class="markdown-preview">{{ note.content[:400] | markdown | safe }}</div>
+            </div>
+        </div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if shared_snippets %}
+<h4 class="mb-3"><i class="bi bi-code-slash"></i> 共享代码</h4>
+<div class="row g-3 mb-4">
+    {% for s in shared_snippets %}
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <a href="{{ url_for('code_view', snippet_id=s.id) }}" class="text-decoration-none"><h5 class="card-title mb-0">{{ s.title }}</h5></a>
+                    <span class="badge bg-info">{{ s.language }}</span>
+                </div>
+                <p class="text-muted small">
+                    <i class="bi bi-person"></i> {{ s.author.username }} ·
+                    <i class="bi bi-clock"></i> {{ s.updated_at | format_time }}
+                </p>
+                <pre class="markdown-preview" style="font-family:monospace;">{{ s.content[:400] }}</pre>
+                <a href="{{ url_for('code_view', snippet_id=s.id) }}" class="btn btn-outline-info btn-sm mt-2"><i class="bi bi-eye"></i> 查看</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if public_posts %}
+<h4 class="mb-3"><i class="bi bi-pencil-square"></i> 公开博客</h4>
+<div class="row g-3 mb-4">
+    {% for post in public_posts %}
+    <div class="col-md-6">
+        <a href="{{ url_for('blog_view', post_id=post.id) }}" class="text-decoration-none">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">{{ post.title }}</h5>
+                <p class="text-muted small">
+                    <i class="bi bi-person"></i> {{ post.author.username }} ·
+                    <i class="bi bi-clock"></i> {{ post.created_at | format_time }}
+                </p>
+                <div class="markdown-preview">{{ post.content[:400] | markdown | safe }}</div>
+            </div>
+        </div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if shared_files %}
+<h4 class="mb-3"><i class="bi bi-folder"></i> 共享文件</h4>
+<div class="row g-3">
+    {% for f in shared_files %}
+    <div class="col-md-4 col-lg-3">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="bi {{ f.original_filename | file_icon }} display-4 text-info"></i>
+                <h6 class="card-title mt-2 text-break">{{ f.original_filename }}</h6>
+                <p class="text-muted small mb-1">{{ f.file_size | format_size }}</p>
+                <p class="text-muted small">
+                    <i class="bi bi-person"></i> {{ f.uploader.username }} ·
+                    {{ f.uploaded_at | format_time }}
+                </p>
+                <a href="{{ url_for('file_download', file_id=f.id) }}" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-download"></i> 下载
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

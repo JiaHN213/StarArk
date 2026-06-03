@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}站点设置{% endblock %}
+{% block content %}
+<div class="d-flex align-items-center gap-3 mb-4">
+    <a href="{{ url_for('admin') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i></a>
+    <h2 class="mb-0"><i class="bi bi-gear"></i> 站点设置</h2>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <i class="bi bi-pencil-square me-2"></i>基本设置
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="site_name" class="form-label">站点名称</label>
+                        <input type="text" class="form-control" id="site_name" name="site_name"
+                               value="{{ site_name }}" required maxlength="50">
+                        <small class="text-muted">显示在导航栏、首页和浏览器标题中</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="max_upload_mb" class="form-label">单文件上传大小限制 (MB)</label>
+                        <input type="number" class="form-control" id="max_upload_mb" name="max_upload_mb"
+                               value="{{ max_upload_mb }}" min="1" max="2048" required>
+                        <small class="text-muted">范围 1-2048MB，当前：{{ max_upload_mb }}MB</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="site_guide" class="form-label">站点指南（Markdown）</label>
+                        <textarea class="form-control" id="site_guide" name="site_guide" rows="14"
+                                  style="font-family:'SF Mono','Consolas',monospace;font-size:0.85rem;"
+                                  placeholder="# 欢迎来到{{ site_name }}
+
+## 功能介绍
+- **笔记**：Markdown 编辑器...
+- **文件**：上传、预览、在线编辑...
+- **代码**：语法高亮、在线执行...
+- **博客**：发布公开文章...
+- **共享广场**：发现全站共享内容...
+
+> 使用 Markdown 语法编写，支持标题、列表、代码块等。">{{ site_guide or '' }}</textarea>
+                        <small class="text-muted">支持 Markdown 语法。此内容将显示在共享广场顶部，所有登录用户可见。</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="deepseek_key" class="form-label">DeepSeek API Key</label>
+                        <input type="password" class="form-control" id="deepseek_key" name="deepseek_key"
+                               value="{{ deepseek_key }}" placeholder="sk-...">
+                        <small class="text-muted">用于 AI 助手功能。密钥保存在 user_data/ 目录中。</small>
+                    </div>
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> 保存</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <i class="bi bi-info-circle me-2"></i>关于
+            </div>
+            <div class="card-body">
+                <p class="text-muted">这是你的个人局域网空间，支持：</p>
+                <ul class="text-muted small">
+                    <li>Markdown 笔记 — 创建、编辑、共享</li>
+                    <li>文件存储 — 上传、文件夹管理、代码查看</li>
+                    <li>代码片段 — 多语言高亮、在线执行、格式检查</li>
+                    <li>个人博客 — Markdown 排版、公开或私有</li>
+                    <li>共享广场 — 发现全站共享内容</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

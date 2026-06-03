@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+{% block title %}首页{% endblock %}
+{% block content %}
+
+{% if current_user.is_authenticated %}
+
+<!-- Hero Banner -->
+<div class="hero">
+    <div class="row align-items-center g-3">
+        <div class="col-lg-8">
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge bg-info"><i class="bi bi-stars"></i> Dashboard</span>
+                <small class="text-muted">{{ stats.note + stats.file + stats.code + stats.blog }} 项内容</small>
+            </div>
+            <h1 class="mb-2">欢迎回来，{{ current_user.username }}</h1>
+            <p class="lead mb-3">你的个人局域网空间 — 笔记、文件、代码、博客，一站式管理</p>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{{ url_for('note_create') }}" class="btn btn-primary">
+                    <i class="bi bi-journal-plus"></i> 新建笔记 <span class="kbd-hint ms-1">N</span>
+                </a>
+                <a href="{{ url_for('code_create') }}" class="btn btn-info">
+                    <i class="bi bi-code-slash"></i> 新建代码 <span class="kbd-hint ms-1">C</span>
+                </a>
+                <a href="#" data-bs-toggle="modal" data-bs-target="#quickUploadModal" class="btn btn-outline-primary">
+                    <i class="bi bi-cloud-upload"></i> 上传文件 <span class="kbd-hint ms-1">U</span>
+                </a>
+                <a href="{{ url_for('blog_create') }}" class="btn btn-outline-primary">
+                    <i class="bi bi-pencil"></i> 发布博客 <span class="kbd-hint ms-1">B</span>
+                </a>
+            </div>
+        </div>
+        <div class="col-lg-4 text-center text-lg-end mt-3 mt-lg-0">
+            <div class="avatar-circle">{{ current_user.username[0] | upper }}</div>
+            <div class="mt-2 text-muted small">
+                {% if current_user.is_super_admin %}<i class="bi bi-shield-fill-check text-warning"></i> 超级管理员
+                {% elif current_user.is_admin %}<i class="bi bi-shield-check text-warning"></i> 管理员
+                {% else %}<i class="bi bi-person-check"></i> 普通用户{% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Row -->
+<div class="row g-3 mb-4 stats-row">
+    <div class="col-6 col-md tilt-card">
+        <a href="{{ url_for('notes') }}" class="text-decoration-none">
+            <div class="card stat-card stat-notes">
+                <div class="card-body">
+                    <i class="bi bi-journal-text stat-icon"></i>
+                    <div class="stat-value">{{ stats.note | default(0) }}</div>
+                    <div class="stat-label">我的笔记</div>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-6 col-md tilt-card">
+        <a href="{{ url_for('files') }}" class="text-decoration-none">
+            <div class="card stat-card stat-files">
+                <div class="card-body">
+                    <i class="bi bi-folder stat-icon"></i>
+                    <div class="stat-value">{{ stats.file | default(0) }}</div>
+                    <div class="stat-label">我的文件</div>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-6 col-md tilt-card">
+        <a href="{{ url_for('code') }}" class="text-decoration-none">
+            <div class="card stat-card stat-code">
+                <div class="card-body">
+                    <i class="bi bi-code-slash stat-icon"></i>
+                    <div class="stat-value">{{ stats.code | default(0) }}</div>
+                    <div class="stat-label">我的代码</div>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-6 col-md tilt-card">
+        <a href="{{ url_for('blog') }}" class="text-decoration-none">
+            <div class="card stat-card stat-blogs">
+                <div class="card-body">
+                    <i class="bi bi-pencil-square stat-icon"></i>
+                    <div class="stat-value">{{ stats.blog | default(0) }}</div>
+                    <div class="stat-label">我的博客</div>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-12 col-md tilt-card">
+        <a href="{{ url_for('shared') }}" class="text-decoration-none">
+            <div class="card stat-card stat-shared">
+                <div class="card-body">
+                    <i class="bi bi-globe2 stat-icon"></i>
+                    <div class="stat-value">{{ stats.shared | default(0) }}</div>
+                    <div class="stat-label">共享广场</div>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-journal-text me-2"></i>最近笔记</span>
+                <a href="{{ url_for('notes') }}" class="btn btn-sm btn-outline-primary">
+                    全部 <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for note in recent_notes_list %}
+                    <a href="{{ url_for('note_view', note_id=note.id) }}" class="list-group-item list-group-item-action border-0">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-truncate me-2">
+                                {% if note.is_shared %}<i class="bi bi-globe2 text-success me-1" title="共享"></i>{% endif %}
+                                {{ note.title }}
+                            </span>
+                            <small class="text-muted text-nowrap">{{ note.updated_at | format_time }}</small>
+                        </div>
+                    </a>
+                    {% else %}
+                    <div class="text-center py-4 text-muted">
+                        <i class="bi bi-journal-plus d-block mb-2" style="font-size:1.8rem;"></i>
+                        还没有笔记，<a href="{{ url_for('note_create') }}">创建第一篇</a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-folder me-2"></i>最近文件</span>
+                <a href="{{ url_for('files') }}" class="btn btn-sm btn-outline-primary">
+                    全部 <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for f in recent_files_list %}
+                    <a href="{{ url_for('file_preview', file_id=f.id) }}" class="list-group-item list-group-item-action border-0">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-truncate me-2">
+                                <i class="bi {{ f.original_filename | file_icon }} me-1"></i>{{ f.original_filename }}
+                            </span>
+                            <small class="text-muted text-nowrap">{{ f.file_size | format_size }}</small>
+                        </div>
+                    </a>
+                    {% else %}
+                    <div class="text-center py-4 text-muted">
+                        <i class="bi bi-cloud-upload d-block mb-2" style="font-size:1.8rem;"></i>
+                        还没有文件，去<a href="{{ url_for('files') }}">上传</a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<!-- Landing Page -->
+<div class="landing-hero">
+    <h1 class="mb-3">{{ site_name }}</h1>
+    <p class="lead mb-4" style="color: var(--text-muted); font-size:1.1rem;">
+        你的个人局域网空间<br class="d-md-none">笔记 · 文件 · 代码 · 博客，一站式管理
+    </p>
+    <div class="d-flex justify-content-center gap-3 mb-5 flex-wrap">
+        <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg px-4">
+            <i class="bi bi-box-arrow-in-right"></i> 登录
+        </a>
+        <a href="{{ url_for('register') }}" class="btn btn-outline-primary btn-lg px-4">
+            <i class="bi bi-person-plus"></i> 注册
+        </a>
+    </div>
+</div>
+
+<div class="row g-4 mb-5">
+    <div class="col-sm-6 col-lg-3">
+        <div class="feature-card h-100">
+            <div class="feature-icon notes"><i class="bi bi-journal-text"></i></div>
+            <h5>Markdown 笔记</h5>
+            <p class="text-muted small mb-0">创建、编辑笔记，支持 Markdown 渲染，一键共享</p>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="feature-card h-100">
+            <div class="feature-icon files"><i class="bi bi-folder"></i></div>
+            <h5>文件存储</h5>
+            <p class="text-muted small mb-0">拖拽上传、在线预览、代码高亮、文件夹管理</p>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="feature-card h-100">
+            <div class="feature-icon code"><i class="bi bi-code-slash"></i></div>
+            <h5>代码片段</h5>
+            <p class="text-muted small mb-0">多语言语法高亮，Python 在线运行，便捷管理</p>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="feature-card h-100">
+            <div class="feature-icon blog"><i class="bi bi-pencil-square"></i></div>
+            <h5>个人博客</h5>
+            <p class="text-muted small mb-0">撰写博客文章，Markdown 排版，公开发布</p>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if current_user.is_authenticated %}
+<!-- Quick Upload Modal -->
+<div class="modal fade" id="quickUploadModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('file_upload') }}" enctype="multipart/form-data">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-cloud-upload me-2"></i>快速上传</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small mb-3">上传到：<strong>根目录</strong></p>
+                    <div class="btn-group w-100 mb-3" role="group">
+                        <input type="radio" class="btn-check" name="qmode" id="qmodeFile" value="file" checked>
+                        <label class="btn btn-outline-secondary btn-sm" for="qmodeFile" onclick="setQMode('file')">
+                            <i class="bi bi-file-earmark"></i> 单文件
+                        </label>
+                        <input type="radio" class="btn-check" name="qmode" id="qmodeFolder" value="folder">
+                        <label class="btn btn-outline-secondary btn-sm" for="qmodeFolder" onclick="setQMode('folder')">
+                            <i class="bi bi-folder"></i> 文件夹
+                        </label>
+                    </div>
+                    <input type="file" class="form-control" id="quickFileInput" name="file" required>
+                    <small class="form-text">任意文件类型，最大单文件 {{ max_upload_mb }}MB</small>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-upload"></i> 上传</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+{% block scripts %}
+<script>
+function setQMode(mode) {
+    var inp = document.getElementById('quickFileInput');
+    if (mode === 'folder') {
+        inp.setAttribute('webkitdirectory',''); inp.setAttribute('multiple',''); inp.removeAttribute('required');
+    } else {
+        inp.removeAttribute('webkitdirectory'); inp.removeAttribute('multiple'); inp.setAttribute('required','');
+    }
+    inp.value = '';
+}
+(function(){
+    var m = document.getElementById('quickUploadModal');
+    if (!m) return;
+    m.addEventListener('show.bs.modal', function() {
+        var inp = document.getElementById('quickFileInput');
+        inp.removeAttribute('webkitdirectory'); inp.removeAttribute('multiple'); inp.setAttribute('required','');
+        document.getElementById('qmodeFile').checked = true; inp.value = '';
+    });
+})();
+</script>
+{% endblock %}

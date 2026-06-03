@@ -1,0 +1,1673 @@
+{% extends "base.html" %}
+{% block title %}AI Agent 开发实战 · 小白也能学会{% endblock %}
+{% block content %}
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/atom-one-dark.min.css">
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
+
+<div class="learn-wrap">
+    <!-- Hero -->
+    <div class="learn-hero">
+        <span class="badge bg-info mb-2"><i class="bi bi-stars"></i> 零基础友好 · 11 章 · 3 个简历项目</span>
+        <h1>AI Agent 开发：手把手从 0 教到能写进简历</h1>
+        <p class="lead">不讲虚的理论，每一步都告诉你"为什么这么做"。学完能独立做出 3 个能投递大厂实习的 AI Agent 项目。</p>
+        <div class="d-flex flex-wrap gap-2 mt-3">
+            <span class="learn-tag">Python 基础</span>
+            <span class="learn-tag">Anthropic SDK</span>
+            <span class="learn-tag">Tool Use</span>
+            <span class="learn-tag">RAG</span>
+            <span class="learn-tag">MCP</span>
+            <span class="learn-tag">LangGraph</span>
+            <span class="learn-tag">浏览器自动化</span>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <!-- 左侧目录 -->
+        <aside class="col-lg-3">
+            <div class="learn-toc position-sticky" style="top:80px;">
+                <h6 class="mb-2"><i class="bi bi-list-nested"></i> 目录</h6>
+                <ol class="ps-3 small">
+                    <li><a href="#ch0">学习前的准备</a></li>
+                    <li><a href="#ch1">什么是 AI Agent</a></li>
+                    <li><a href="#ch2">第一行代码：调用 LLM</a></li>
+                    <li><a href="#ch3">工具调用：装上"双手"</a></li>
+                    <li><a href="#ch4">ReAct 循环：Agent 的灵魂</a></li>
+                    <li><a href="#ch5">实战 ① 简历优化</a></li>
+                    <li><a href="#ch6">实战 ② RAG 知识库</a></li>
+                    <li><a href="#ch7">实战 ③ 浏览器自动化</a></li>
+                    <li><a href="#ch8">MCP 协议入门</a></li>
+                    <li><a href="#ch9">简历写法 & 求职建议</a></li>
+                    <li><a href="#ch10">FAQ & 避坑指南</a></li>
+                </ol>
+                <div class="learn-toc-meta">
+                    <i class="bi bi-clock"></i> 完整学完约 4 周<br>
+                    <i class="bi bi-currency-dollar"></i> 预算 ≈ 50 元 API 费<br>
+                    <i class="bi bi-cpu"></i> 任意笔电（无需 GPU）
+                </div>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="col-lg-9 learn-content">
+
+            <!-- ═════════════════ Chapter 0 ═════════════════ -->
+            <section id="ch0" class="learn-chapter">
+                <div class="chapter-num">00</div>
+                <h2>学习前的准备 — 先安心</h2>
+
+                <p>很多人觉得 AI 开发"门槛高"，其实远比想象简单。在开始前，我们先解决三个心理问题。</p>
+
+                <h4>你需要会的（必备）</h4>
+                <ul>
+                    <li><strong>Python 基础</strong>：能写函数、知道 dict / list 是什么、会用 if / for 循环。<br>
+                        <small class="text-muted">不会的话，先花 3 天看廖雪峰 Python 教程或 B 站"莫烦 Python"。</small></li>
+                    <li><strong>命令行基础</strong>：会用 <code>cd</code>、<code>pip install</code>、运行 <code>python xxx.py</code>。</li>
+                    <li><strong>JSON 是什么</strong>：能看懂 <code>{"name": "张三", "age": 18}</code> 就够了。</li>
+                </ul>
+
+                <h4>你<u>不需要</u>会的（劝退点辟谣）</h4>
+                <ul>
+                    <li>❌ 深度学习、神经网络、PyTorch — 我们用别人训练好的模型</li>
+                    <li>❌ 高等数学、线性代数 — 调 API 不需要</li>
+                    <li>❌ 英语好 — 文档都能机翻看懂</li>
+                    <li>❌ GPU / 高配电脑 — 普通笔电就行（云端跑模型）</li>
+                </ul>
+
+                <div class="learn-box learn-box-key">
+                    <strong>🧠 心态建议</strong><br>
+                    AI Agent 开发本质上是 <strong>"调 API + 写业务逻辑"</strong>，跟前端调后端接口本质相同。
+                    LLM 就是一个"超级聪明的 API"，你只是在教它怎么帮你工作。
+                </div>
+
+                <h4>本教程学完你能做到</h4>
+                <div class="row g-2 mb-3">
+                    <div class="col-md-4"><div class="learn-card learn-card-good">
+                        <strong>✓ 技术能力</strong><br>
+                        <small>独立设计实现一个生产级 Agent，含工具调用、错误处理、性能优化</small>
+                    </div></div>
+                    <div class="col-md-4"><div class="learn-card learn-card-good">
+                        <strong>✓ 简历项目</strong><br>
+                        <small>3 个完整的 GitHub 项目 + Demo 视频 + 技术博客</small>
+                    </div></div>
+                    <div class="col-md-4"><div class="learn-card learn-card-good">
+                        <strong>✓ 面试底气</strong><br>
+                        <small>能讲清楚 ReAct、Tool Use、RAG、MCP 等核心概念，应对实习面试</small>
+                    </div></div>
+                </div>
+
+                <h4>4 周学习路径表</h4>
+                <table class="table table-bordered table-sm">
+                    <thead><tr><th>周次</th><th>任务</th><th>每天投入</th></tr></thead>
+                    <tbody>
+                        <tr><td>Week 1</td><td>第 0-4 章，跑通第一个 Agent</td><td>1.5 小时</td></tr>
+                        <tr><td>Week 2</td><td>完成实战 ① 简历优化 Agent</td><td>2 小时</td></tr>
+                        <tr><td>Week 3</td><td>完成实战 ② RAG 知识库</td><td>2.5 小时</td></tr>
+                        <tr><td>Week 4</td><td>完成实战 ③ + MCP + 整理 GitHub + 写博客</td><td>2 小时</td></tr>
+                    </tbody>
+                </table>
+
+                <div class="learn-box learn-box-tip">
+                    <strong>💡 学习方法</strong><br>
+                    1. <strong>边看边敲</strong>：不要复制代码，自己敲一遍，错了才记得住<br>
+                    2. <strong>问 Claude / GPT</strong>：每个不懂的概念立刻问 AI，比看教程快 10 倍<br>
+                    3. <strong>每章末尾的"小练习"必做</strong>：练习是检验真懂的唯一方式<br>
+                    4. <strong>项目完成立刻推 GitHub</strong>：拖到最后会忘
+                </div>
+            </section>
+
+            <!-- ═════════════════ Chapter 1 ═════════════════ -->
+            <section id="ch1" class="learn-chapter">
+                <div class="chapter-num">01</div>
+                <h2>什么是 AI Agent — 一个生活化的故事</h2>
+
+                <p>假设你想去旅行。你能找到 3 种"助手"：</p>
+
+                <table class="table table-bordered">
+                    <thead><tr><th>助手类型</th><th>能力</th><th>对应技术</th></tr></thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>① 旅游手册</strong></td>
+                            <td>只能查信息，问什么答什么。问完了不会主动做事。</td>
+                            <td>普通 LLM（如 ChatGPT 网页版）</td>
+                        </tr>
+                        <tr>
+                            <td><strong>② 智能客服脚本</strong></td>
+                            <td>有固定流程：选目的地→查机票→订酒店。每一步问你"是否继续"。</td>
+                            <td>传统对话机器人 / 工作流</td>
+                        </tr>
+                        <tr>
+                            <td><strong>③ 私人助理</strong> 🌟</td>
+                            <td>你说"帮我订下周去东京的便宜机票"，TA 自己查机票、比价、订票、发邮件给你。<strong>会自己决定下一步做什么</strong>。</td>
+                            <td><strong>AI Agent</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="learn-box learn-box-key">
+                    <strong>🧠 一句话定义</strong><br>
+                    <strong>Agent = LLM（大脑）+ 工具（双手）+ 循环（思考多步）</strong>
+                </div>
+
+                <h4>1.1 拆解：Agent 的三个组成部分</h4>
+
+                <div class="learn-diagram">
+                    <pre><code class="language-text">┌─────────────────────────────────────────────┐
+│                  AI AGENT                    │
+├─────────────────────────────────────────────┤
+│                                              │
+│   ┌────────────┐    ┌─────────────────┐    │
+│   │   LLM      │◄──►│  Tools (工具集)  │    │
+│   │ (Claude /  │    │  • 搜索引擎      │    │
+│   │  GPT-4)    │    │  • 数据库查询    │    │
+│   │            │    │  • 计算器        │    │
+│   │  会思考、   │    │  • 文件读写      │    │
+│   │  会决策     │    │  • API 调用      │    │
+│   └─────┬──────┘    └─────────────────┘    │
+│         │                                    │
+│         ▼                                    │
+│   ┌─────────────────────────────────────┐   │
+│   │  循环（Loop）：直到完成目标          │   │
+│   │  思考 → 调工具 → 看结果 → 再思考...  │   │
+│   └─────────────────────────────────────┘   │
+│                                              │
+└─────────────────────────────────────────────┘</code></pre>
+                </div>
+
+                <h4>1.2 ReAct 范式 — Agent 怎么思考的</h4>
+
+                <p>ReAct = <strong>Re</strong>asoning + <strong>Act</strong>ing（思考 + 行动）。Agent 不是一次给出答案，而是反复这个循环：</p>
+
+                <div class="learn-diagram">
+                    <pre><code class="language-text">用户问：「我下周去北京，要带什么？」
+
+╭─ 第 1 轮 ─────────────────────────────────╮
+│ 💭 Thought（思考）：                       │
+│    我需要先知道北京下周的天气              │
+│                                            │
+│ ⚙️ Action（行动）：                        │
+│    调用 get_weather(city="北京", days=7)  │
+│                                            │
+│ 👀 Observation（观察）：                   │
+│    返回：周一晴 18°C，周二雨 15°C...      │
+╰────────────────────────────────────────────╯
+                  ↓
+╭─ 第 2 轮 ─────────────────────────────────╮
+│ 💭 Thought：温度 15-18°C 偏凉，          │
+│    且有雨，需要薄外套+雨具                │
+│                                            │
+│ ⚙️ Action：无需更多工具，直接回答         │
+│                                            │
+│ 💬 最终回答：「建议带薄外套、雨伞、       │
+│    保暖内衣。具体每天搭配..」              │
+╰────────────────────────────────────────────╯</code></pre>
+                </div>
+
+                <h4>1.3 真实场景应用 — Agent 都能干啥</h4>
+                <div class="row g-2">
+                    <div class="col-md-6"><div class="learn-card">
+                        <strong>📚 学习类</strong><br>
+                        <small>个人知识库问答、论文摘要、刷题陪练</small>
+                    </div></div>
+                    <div class="col-md-6"><div class="learn-card">
+                        <strong>💼 办公类</strong><br>
+                        <small>简历优化、邮件起草、PPT 生成、会议纪要</small>
+                    </div></div>
+                    <div class="col-md-6"><div class="learn-card">
+                        <strong>🔍 信息类</strong><br>
+                        <small>新闻聚合、岗位推荐、价格监控、新书追踪</small>
+                    </div></div>
+                    <div class="col-md-6"><div class="learn-card">
+                        <strong>👨‍💻 编程类</strong><br>
+                        <small>代码审查、Bug 定位、单元测试生成、文档自动化</small>
+                    </div></div>
+                </div>
+
+                <h4>1.4 为什么 2025-2026 是黄金期</h4>
+                <ul>
+                    <li>🚀 <strong>模型成熟</strong>：Claude / GPT 已能稳定多步工具调用</li>
+                    <li>💰 <strong>大厂在抢</strong>：字节跳动、阿里、腾讯、美团都在招 AI Agent 工程师，月薪 30K+ 起步</li>
+                    <li>📦 <strong>生态完善</strong>：LangChain / LangGraph / MCP 等工具链成熟</li>
+                    <li>🌱 <strong>赛道还早</strong>：大部分公司刚开始做 Agent，没人比你早 3 年</li>
+                </ul>
+
+                <div class="learn-box learn-box-tip">
+                    <strong>✅ 第 1 章你应该理解了</strong>
+                    <ul class="mb-0 mt-1">
+                        <li>Agent 与普通 LLM 的本质区别</li>
+                        <li>ReAct 循环的 4 个关键词：Thought / Action / Observation / Loop</li>
+                        <li>"Agent = LLM + 工具 + 循环" 这个公式</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- ═════════════════ Chapter 2 ═════════════════ -->
+            <section id="ch2" class="learn-chapter">
+                <div class="chapter-num">02</div>
+                <h2>第一行代码 — 调用 LLM API（30 分钟）</h2>
+
+                <h4>2.1 API 是什么？— 快递员的比喻</h4>
+                <p>你想吃肯德基，不用自己去做汉堡。打开美团 App，选餐 → 下单 → 快递员送到你家。这里：</p>
+                <ul>
+                    <li><strong>美团 App</strong> = SDK（你用的工具）</li>
+                    <li><strong>下单接口</strong> = API（约定好的对接方式）</li>
+                    <li><strong>快递员</strong> = 网络</li>
+                    <li><strong>肯德基厨房</strong> = LLM 服务器</li>
+                    <li><strong>汉堡</strong> = AI 的回答</li>
+                </ul>
+
+                <h4>2.2 申请 API Key — 三选一</h4>
+                <div class="row g-2">
+                    <div class="col-md-4"><div class="learn-card">
+                        <strong>Anthropic Claude 🌟</strong><br>
+                        <small>本教程主推荐<br>需海外信用卡 / 中转</small><br>
+                        <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a>
+                    </div></div>
+                    <div class="col-md-4"><div class="learn-card">
+                        <strong>DeepSeek</strong><br>
+                        <small>国内可访问<br>充 10 元能用很久</small><br>
+                        <a href="https://platform.deepseek.com" target="_blank">platform.deepseek.com</a>
+                    </div></div>
+                    <div class="col-md-4"><div class="learn-card">
+                        <strong>智谱 GLM-4</strong><br>
+                        <small>国内 + 新用户送 token<br>API 兼容 OpenAI</small><br>
+                        <a href="https://open.bigmodel.cn" target="_blank">open.bigmodel.cn</a>
+                    </div></div>
+                </div>
+
+                <div class="learn-box learn-box-tip">
+                    <strong>💡 推荐组合</strong><br>
+                    本教程代码以 Claude 为例。如果你只能用 DeepSeek，把代码里 <code>from anthropic import Anthropic</code> 改成 OpenAI 兼容的 <code>from openai import OpenAI</code>，配置 <code>base_url="https://api.deepseek.com"</code> 即可，逻辑完全一样。
+                </div>
+
+                <h4>2.3 搭建本地环境（第一次详细步骤）</h4>
+
+                <p><strong>Step 1</strong>：新建项目文件夹</p>
+                <pre><code class="language-bash"># 找个喜欢的位置（比如 D 盘）
+cd D:\
+mkdir agent-tutorial
+cd agent-tutorial</code></pre>
+
+                <p><strong>Step 2</strong>：创建虚拟环境（为什么要？避免污染系统 Python）</p>
+                <pre><code class="language-bash">python -m venv .venv
+
+# 激活：Windows
+.venv\Scripts\activate
+
+# 激活：macOS / Linux
+source .venv/bin/activate
+
+# 看到命令行前面出现 (.venv) 就成功了</code></pre>
+
+                <p><strong>Step 3</strong>：安装依赖</p>
+                <pre><code class="language-bash">pip install anthropic python-dotenv rich</code></pre>
+
+                <table class="table table-sm">
+                    <thead><tr><th>包名</th><th>作用</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>anthropic</code></td><td>Claude API 官方 SDK</td></tr>
+                        <tr><td><code>python-dotenv</code></td><td>从 .env 文件读环境变量（藏 API Key 安全）</td></tr>
+                        <tr><td><code>rich</code></td><td>终端彩色打印，让 Agent 输出好看</td></tr>
+                    </tbody>
+                </table>
+
+                <p><strong>Step 4</strong>：保存 API Key 到 <code>.env</code> 文件</p>
+                <pre><code class="language-bash"># 在 agent-tutorial 文件夹下创建 .env 文件
+# 内容如下（替换成你的 Key）：
+
+ANTHROPIC_API_KEY=sk-ant-api03-xxxxxxxxxxxx</code></pre>
+
+                <div class="learn-box learn-box-tip">
+                    <strong>⚠️ 安全提醒</strong><br>
+                    <code>.env</code> 文件含密钥，<strong>千万不要上传 GitHub</strong>！项目根目录新建 <code>.gitignore</code>，添加一行 <code>.env</code>。
+                </div>
+
+                <h4>2.4 第一个程序：Hello, Claude</h4>
+
+                <p>新建文件 <code>01_hello.py</code>：</p>
+
+                <pre><code class="language-python">from anthropic import Anthropic
+from dotenv import load_dotenv
+
+# 1) 加载 .env 中的 API Key 到环境变量
+load_dotenv()
+
+# 2) 创建客户端（会自动读取 ANTHROPIC_API_KEY）
+client = Anthropic()
+
+# 3) 发送一条消息
+response = client.messages.create(
+    model="claude-sonnet-4-5",          # 用哪个模型
+    max_tokens=200,                     # 最多生成 200 个 token（约 100 个汉字）
+    messages=[
+        {"role": "user", "content": "用一句话介绍 AI Agent 是什么"}
+    ]
+)
+
+# 4) 打印 AI 的回复
+print(response.content[0].text)</code></pre>
+
+                <p>运行：</p>
+                <pre><code class="language-bash">python 01_hello.py</code></pre>
+
+                <p>如果看到类似这样的输出就成功了：</p>
+                <pre><code class="language-text">AI Agent 是能感知环境、自主决策并执行任务的智能程序。</code></pre>
+
+                <h4>2.5 逐行解读代码</h4>
+                <div class="learn-box">
+                    <ul class="mb-0">
+                        <li><code>load_dotenv()</code>：读 .env 文件，把里面的 KEY 注入到 <code>os.environ</code></li>
+                        <li><code>client = Anthropic()</code>：客户端会自动从环境变量读 API Key，不需要手动传</li>
+                        <li><code>messages.create(...)</code>：核心 API 调用</li>
+                        <li><code>role: "user"</code>：消息身份（user / assistant / system 三种）</li>
+                        <li><code>response.content[0].text</code>：AI 回复的内容。<code>content</code> 是个列表（可能含多个块）</li>
+                    </ul>
+                </div>
+
+                <h4>2.6 常见错误 & 解决</h4>
+                <div class="learn-box learn-box-tip">
+                    <strong>❌ AuthenticationError: invalid api key</strong><br>
+                    → 检查 .env 中 Key 是否完整、有没有多余空格<br>
+                    → 检查是否调用了 <code>load_dotenv()</code>
+                </div>
+                <div class="learn-box learn-box-tip">
+                    <strong>❌ Connection error / Timeout</strong><br>
+                    → 国内访问需要科学上网，或换 DeepSeek<br>
+                    → 检查代理是否开启了"系统代理"
+                </div>
+                <div class="learn-box learn-box-tip">
+                    <strong>❌ Insufficient credit / 余额不足</strong><br>
+                    → Anthropic 需要充值。学习阶段 5 美元够用 1 个月
+                </div>
+
+                <div class="learn-box learn-box-key">
+                    <strong>🎯 练习</strong><br>
+                    改造 <code>01_hello.py</code>：让程序接收命令行参数作为问题，回复后再追问一次。
+                    （Hint: <code>sys.argv</code> + 把上一轮的 assistant 消息加入 messages 列表）
+                </div>
+            </section>
+
+            <!-- ═════════════════ Chapter 3 ═════════════════ -->
+            <section id="ch3" class="learn-chapter">
+                <div class="chapter-num">03</div>
+                <h2>工具调用 — 给 LLM 装上"双手"（45 分钟）</h2>
+
+                <h4>3.1 为什么 LLM 需要工具</h4>
+                <p>纯 LLM 有三大短板：</p>
+                <ul>
+                    <li>🧠 <strong>知识有截止时间</strong>：Claude 不知道今天的新闻</li>
+                    <li>🔢 <strong>不擅长精确计算</strong>：让它算 <code>3719 × 8261</code> 经常出错</li>
+                    <li>🔒 <strong>无法操作外部世界</strong>：发不了邮件、查不了数据库</li>
+                </ul>
+
+                <p><strong>解决方案：让 LLM 学会调用工具。</strong></p>
+
+                <h4>3.2 最小例子：让 AI 算 2+2</h4>
+
+                <p>新建 <code>02_calculator.py</code>：</p>
+
+                <pre><code class="language-python">from anthropic import Anthropic
+from dotenv import load_dotenv
+
+load_dotenv()
+client = Anthropic()
+
+# 1) 定义工具函数（真正干活的 Python 代码）
+def add(a: int, b: int) -> int:
+    return a + b
+
+# 2) 告诉 LLM 有这个工具（JSON Schema 格式）
+tools = [
+    {
+        "name": "add",
+        "description": "计算两个整数的和",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "a": {"type": "integer", "description": "第一个加数"},
+                "b": {"type": "integer", "description": "第二个加数"}
+            },
+            "required": ["a", "b"]
+        }
+    }
+]
+
+# 3) 发起对话
+response = client.messages.create(
+    model="claude-sonnet-4-5",
+    max_tokens=500,
+    tools=tools,                                # 关键：传入 tools
+    messages=[{"role": "user", "content": "请帮我算 137 + 246"}]
+)
+
+# 4) 看看 LLM 怎么回应
+print("stop_reason:", response.stop_reason)
+for block in response.content:
+    print(f"  type={block.type}, content={block}")</code></pre>
+
+                <p>运行后输出（关键部分）：</p>
+                <pre><code class="language-text">stop_reason: tool_use
+  type=tool_use, content=ToolUseBlock(
+    id='toolu_xxx',
+    name='add',
+    input={'a': 137, 'b': 246}
+  )</code></pre>
+
+                <div class="learn-box learn-box-key">
+                    <strong>🤯 这里发生了什么</strong><br>
+                    LLM 看到工具描述后，<strong>自己决定</strong>这个问题需要调用 <code>add</code>，并自动从用户输入解析出 <code>a=137, b=246</code>。它没有给你最终答案 —— 它在等你"真正"执行这个函数。
+                </div>
+
+                <h4>3.3 完整流程：执行工具 + 把结果给 LLM</h4>
+
+                <pre><code class="language-python">from anthropic import Anthropic
+from dotenv import load_dotenv
+
+load_dotenv()
+client = Anthropic()
+
+def add(a, b): return a + b
+
+tools = [{
+    "name": "add",
+    "description": "计算两个整数的和",
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "a": {"type": "integer"},
+            "b": {"type": "integer"}
+        },
+        "required": ["a", "b"]
+    }
+}]
+
+def solve(question):
+    messages = [{"role": "user", "content": question}]
+
+    # —— 第 1 轮：LLM 决定调用工具 ——
+    r1 = client.messages.create(
+        model="claude-sonnet-4-5",
+        max_tokens=500, tools=tools, messages=messages
+    )
+    messages.append({"role": "assistant", "content": r1.content})
+
+    if r1.stop_reason != "tool_use":
+        return r1.content[0].text  # LLM 不需要工具，直接回答
+
+    # —— 执行工具 ——
+    tool_block = next(b for b in r1.content if b.type == "tool_use")
+    print(f"🔧 LLM 想调用 {tool_block.name}({tool_block.input})")
+    result = add(**tool_block.input)
+    print(f"📊 实际执行结果：{result}")
+
+    # —— 第 2 轮：把工具结果交给 LLM，让它生成最终回答 ——
+    messages.append({
+        "role": "user",
+        "content": [{
+            "type": "tool_result",
+            "tool_use_id": tool_block.id,
+            "content": str(result)
+        }]
+    })
+
+    r2 = client.messages.create(
+        model="claude-sonnet-4-5",
+        max_tokens=500, tools=tools, messages=messages
+    )
+    return r2.content[0].text
+
+print(solve("帮我算 137 + 246"))</code></pre>
+
+                <p>输出：</p>
+                <pre><code class="language-text">🔧 LLM 想调用 add({'a': 137, 'b': 246})
+📊 实际执行结果：383
+137 + 246 等于 383。</code></pre>
+
+                <h4>3.4 工具描述（schema）怎么写</h4>
+
+                <p>schema 是给 LLM 看的"使用说明书"。<strong>写得越清楚，LLM 调用越准</strong>。</p>
+
+                <pre><code class="language-python">{
+    "name": "search_books",                    # 工具名（蛇形）
+    "description": "搜索图书馆中的书籍。"        # 关键！说清楚什么时候用
+                   "适合需要查询书名、作者、"
+                   "出版年份等信息时使用。",
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "keyword": {
+                "type": "string",
+                "description": "搜索关键词，如书名或作者"
+            },
+            "year_from": {
+                "type": "integer",
+                "description": "出版年份下限（可选）"
+            }
+        },
+        "required": ["keyword"]               # 必填字段
+    }
+}</code></pre>
+
+                <div class="learn-box learn-box-tip">
+                    <strong>💡 写好 description 的 3 个原则</strong>
+                    <ol class="mb-0">
+                        <li><strong>What</strong>：这个工具是做什么的（1 句）</li>
+                        <li><strong>When</strong>：什么场景下应该用（1-2 句）</li>
+                        <li><strong>How</strong>：参数怎么填、返回什么格式</li>
+                    </ol>
+                </div>
+
+                <div class="learn-box learn-box-key">
+                    <strong>🎯 练习</strong><br>
+                    给上面的代码再加一个工具 <code>multiply(a, b)</code>。问 LLM "(3+5) × 7 等于多少"，看它是否能自动调用两次工具（先 add，再 multiply）。
+                </div>
+            </section>
+
+            <!-- ═════════════════ Chapter 4 ═════════════════ -->
+            <section id="ch4" class="learn-chapter">
+                <div class="chapter-num">04</div>
+                <h2>ReAct 循环 — Agent 的灵魂（60 分钟）</h2>
+
+                <h4>4.1 上一章的代码有个 bug</h4>
+                <p>第 3 章的 <code>solve()</code> 只支持<strong>一次工具调用</strong>。如果问 "(3+5) × 7"，LLM 想先 add 再 multiply，但我们的代码只让它调 1 次就强制结束。</p>
+
+                <p><strong>真正的 Agent 需要循环</strong>：调一次工具 → 看结果 → 决定再调还是结束 → 重复。</p>
+
+                <h4>4.2 ReAct 循环的标准代码</h4>
+
+                <p>新建 <code>03_agent.py</code>：</p>
+
+                <pre><code class="language-python">from anthropic import Anthropic
+from dotenv import load_dotenv
+
+load_dotenv()
+client = Anthropic()
+
+# ─── 工具实现 ───────────────────────────
+def add(a, b): return a + b
+def multiply(a, b): return a * b
+def get_weather(city):
+    fake = {"北京": "晴 22°C", "上海": "雨 18°C"}
+    return fake.get(city, f"{city} 数据缺失")
+
+TOOL_FUNCS = {
+    "add": add,
+    "multiply": multiply,
+    "get_weather": get_weather,
+}
+
+# ─── 工具 Schema ────────────────────────
+TOOLS = [
+    {
+        "name": "add",
+        "description": "计算两个整数的和",
+        "input_schema": {"type": "object",
+            "properties": {"a": {"type":"integer"}, "b": {"type":"integer"}},
+            "required": ["a","b"]}
+    },
+    {
+        "name": "multiply",
+        "description": "计算两个整数的乘积",
+        "input_schema": {"type": "object",
+            "properties": {"a": {"type":"integer"}, "b": {"type":"integer"}},
+            "required": ["a","b"]}
+    },
+    {
+        "name": "get_weather",
+        "description": "查询指定城市的当前天气",
+        "input_schema": {"type": "object",
+            "properties": {"city": {"type":"string"}},
+            "required": ["city"]}
+    },
+]
+
+# ─── 核心：Agent 主循环 ───────────────────
+def run_agent(user_message: str, max_steps: int = 10):
+    """ReAct 循环：思考 → 调工具 → 观察 → 重复，直到完成或达上限"""
+    messages = [{"role": "user", "content": user_message}]
+
+    for step in range(1, max_steps + 1):
+        print(f"\n━━━ Step {step} ━━━")
+
+        # ① 让 LLM 思考下一步
+        response = client.messages.create(
+            model="claude-sonnet-4-5",
+            max_tokens=2048,
+            tools=TOOLS,
+            messages=messages,
+        )
+
+        # ② 把 LLM 的整条回复（含 tool_use 块）加入历史
+        messages.append({"role": "assistant", "content": response.content})
+
+        # ③ 检查停止原因
+        if response.stop_reason == "end_turn":
+            # LLM 说完了，给出最终答案
+            for block in response.content:
+                if block.type == "text":
+                    print(f"\n💬 最终答案：{block.text}")
+            return
+
+        if response.stop_reason != "tool_use":
+            print(f"⚠️ 异常停止原因：{response.stop_reason}")
+            return
+
+        # ④ 执行所有工具调用
+        tool_results = []
+        for block in response.content:
+            if block.type == "text" and block.text.strip():
+                print(f"💭 思考：{block.text}")
+            if block.type == "tool_use":
+                print(f"🔧 调用 {block.name}({block.input})")
+                func = TOOL_FUNCS.get(block.name)
+                if not func:
+                    result = f"错误：工具 {block.name} 不存在"
+                else:
+                    try:
+                        result = func(**block.input)
+                    except Exception as e:
+                        result = f"工具执行出错：{e}"
+                print(f"👀 结果：{result}")
+
+                tool_results.append({
+                    "type": "tool_result",
+                    "tool_use_id": block.id,
+                    "content": str(result),
+                })
+
+        # ⑤ 把所有工具结果作为 user 消息加入历史
+        messages.append({"role": "user", "content": tool_results})
+
+    print(f"\n⏱ 达到最大步数 {max_steps}，未完成。")
+
+
+# ─── 测试 ────────────────────────────────
+if __name__ == "__main__":
+    run_agent("我要去北京出差，今天天气如何，建议穿什么？还有，(3+5)×7 等于多少？")</code></pre>
+
+                <h4>4.3 运行效果</h4>
+                <pre><code class="language-text">━━━ Step 1 ━━━
+💭 思考：用户问了两个问题，先查天气
+🔧 调用 get_weather({'city': '北京'})
+👀 结果：晴 22°C
+
+━━━ Step 2 ━━━
+💭 思考：再算数学题
+🔧 调用 add({'a': 3, 'b': 5})
+👀 结果：8
+
+━━━ Step 3 ━━━
+💭 思考：用 add 的结果继续算乘法
+🔧 调用 multiply({'a': 8, 'b': 7})
+👀 结果：56
+
+━━━ Step 4 ━━━
+💬 最终答案：北京今天晴 22°C，建议穿薄外套或长袖衬衫。
+(3+5)×7 = 56。</code></pre>
+
+                <div class="learn-box learn-box-key">
+                    <strong>🎉 这就是 ReAct Agent</strong><br>
+                    LLM 自主拆解了"既要查天气又要算数"的复杂请求，自己决定先做哪个、后做哪个，最后把所有结果整合成自然语言回复。
+                </div>
+
+                <h4>4.4 必须理解的 5 个关键设计</h4>
+                <table class="table table-bordered table-sm">
+                    <thead><tr><th>设计</th><th>为什么</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>max_steps</code> 上限</td><td>防止 LLM 死循环烧 token</td></tr>
+                        <tr><td>把 assistant 整条回复加入 messages</td><td>包含 tool_use 块的 ID，下一轮 LLM 才能匹配 tool_result</td></tr>
+                        <tr><td>tool_result 包在 user 角色里</td><td>API 规定：工具结果以 user 身份传回（counterintuitive 但必须）</td></tr>
+                        <tr><td>循环里 try/except</td><td>工具可能报错，错误信息要让 LLM 看到，它会自己重试或换方案</td></tr>
+                        <tr><td>每轮把所有 tool_use 一起处理</td><td>LLM 可能一轮请求多个工具，必须全部执行后一次性返回</td></tr>
+                    </tbody>
+                </table>
+
+                <h4>4.5 调试技巧</h4>
+                <ul>
+                    <li>打印每一步的 <code>stop_reason</code>，可能是 <code>end_turn</code>、<code>tool_use</code>、<code>max_tokens</code></li>
+                    <li>打印 <code>response.usage</code> 看 token 消耗，警惕过长上下文</li>
+                    <li>用 <code>rich.print_json</code> 漂亮打印 messages 调试</li>
+                    <li>给工具加详细日志，看 LLM 传的参数是否正确</li>
+                </ul>
+
+                <div class="learn-box learn-box-key">
+                    <strong>🎯 练习</strong><br>
+                    1. 加一个 <code>save_to_file(filename, content)</code> 工具，让 Agent 帮你把天气查询结果存到 txt<br>
+                    2. 加一个 <code>get_news(topic)</code> 模拟工具，返回固定假新闻，测试多工具串联
+                </div>
+            </section>
+
+            <!-- ═════════════════ Chapter 5: Project 1 ═════════════════ -->
+            <section id="ch5" class="learn-chapter learn-chapter-project">
+                <div class="chapter-num">05</div>
+                <h2>实战 ① 简历优化 Agent <span class="badge bg-success">3 小时 · 简历项目</span></h2>
+
+                <h4>5.1 需求分析 — 像 PM 一样思考</h4>
+                <p><strong>用户场景</strong>：求职季，用户想把同一份简历针对不同岗位做定制化优化。</p>
+                <p><strong>痛点</strong>：手动针对每个 JD 改简历，耗时 1-2 小时/份；改出来还不一定贴合岗位</p>
+                <p><strong>解决方案</strong>：输入简历 JSON + 目标岗位 JD，Agent 自动产出优化版简历</p>
+
+                <h4>5.2 架构设计</h4>
+                <div class="learn-diagram">
+                    <pre><code class="language-text">输入                         Agent 内部                       输出
+───────                       ──────────────                  ───────
+
+[简历 JSON] ───►  ┌────────────────────────┐  ───► [改写后简历]
+[目标 JD]   ───►  │   主循环 (ReAct Loop)   │  ───► [修改建议清单]
+                  │                         │
+                  │  ① extract_jd_keywords  │ 从 JD 提关键词
+                  │  ② score_match          │ 评估匹配度
+                  │  ③ rewrite_section      │ 改写薄弱段落
+                  │  ④ generate_summary     │ 输出汇总
+                  └────────────────────────┘</code></pre>
+                </div>
+
+                <h4>5.3 工具 1：JD 关键词提取</h4>
+                <p>新建 <code>tools/jd_extractor.py</code>：</p>
+                <pre><code class="language-python">import json
+from anthropic import Anthropic
+
+client = Anthropic()
+
+def extract_jd_keywords(jd: str) -> list:
+    """从 JD 提取 8-12 个核心技术关键词"""
+    prompt = f"""从下面的招聘 JD 中，提取 8-12 个最关键的技术/能力关键词。
+
+JD：
+{jd}
+
+只返回一个 JSON 数组，不要解释。例如：["Python","Flask","Redis"]"""
+
+    r = client.messages.create(
+        model="claude-haiku-4-5",     # 用便宜模型，省钱
+        max_tokens=200,
+        messages=[{"role": "user", "content": prompt}]
+    )
+    text = r.content[0].text.strip()
+
+    # 容错解析（LLM 偶尔会带 markdown 代码块）
+    if "[" in text:
+        start = text.find("[")
+        end = text.rfind("]") + 1
+        try:
+            return json.loads(text[start:end])
+        except Exception:
+            pass
+    return []
+
+# 测试
+if __name__ == "__main__":
+    jd = """字节跳动 - 后端开发实习生
+要求：精通 Python，熟悉 Flask 或 FastAPI；
+熟悉 Redis、MySQL；有大并发优化经验加分。"""
+    print(extract_jd_keywords(jd))
+    # 输出类似：['Python', 'Flask', 'FastAPI', 'Redis', 'MySQL', '大并发优化', ...]</code></pre>
+
+                <h4>5.4 工具 2：匹配度评估</h4>
+                <pre><code class="language-python">def score_match(experience: str, keywords: list) -> dict:
+    """评估一段经验描述与 JD 关键词的匹配度"""
+    exp_lower = experience.lower()
+    matched = [k for k in keywords if k.lower() in exp_lower]
+    missing = [k for k in keywords if k not in matched]
+    return {
+        "matched": matched,
+        "missing": missing[:5],                # 最缺的 5 个
+        "ratio": round(len(matched) / max(len(keywords), 1), 2),
+    }
+
+# 测试
+exp = "在某公司用 Python 和 Flask 写了内部数据看板"
+kw = ["Python", "Flask", "Redis", "MySQL", "Docker"]
+print(score_match(exp, kw))
+# {'matched': ['Python','Flask'], 'missing': ['Redis','MySQL','Docker'], 'ratio': 0.4}</code></pre>
+
+                <h4>5.5 工具 3：段落重写</h4>
+                <pre><code class="language-python">def rewrite_section(original: str, target_keywords: list, role: str) -> str:
+    """针对岗位关键词重写经验段落（STAR 法则 + 量化）"""
+    prompt = f"""你是简历优化专家。请把下面这段经验重写得更贴合"{role}"岗位。
+
+原文：
+{original}
+
+需要自然融入的关键词（不要堆砌）：{', '.join(target_keywords)}
+
+要求：
+1. 用 STAR 法则结构（背景-任务-行动-结果）
+2. 尽量量化（数字、百分比、时间）
+3. 不编造没有的经历，只是更好地包装事实
+4. 直接输出改写后的段落，不要解释"""
+
+    r = client.messages.create(
+        model="claude-sonnet-4-5",     # 写作用强模型
+        max_tokens=500,
+        messages=[{"role": "user", "content": prompt}]
+    )
+    return r.content[0].text.strip()</code></pre>
+
+                <h4>5.6 主循环 — 把三个工具串起来</h4>
+
+                <p>新建 <code>resume_agent.py</code>（主入口）：</p>
+
+                <pre><code class="language-python">import json
+from anthropic import Anthropic
+from dotenv import load_dotenv
+from tools.jd_extractor import extract_jd_keywords
+from tools.scoring import score_match
+from tools.rewriter import rewrite_section
+
+load_dotenv()
+client = Anthropic()
+
+TOOLS = [
+    {"name": "extract_jd_keywords",
+     "description": "从招聘 JD 中提取核心技术关键词",
+     "input_schema": {"type":"object",
+       "properties": {"jd": {"type":"string"}},
+       "required": ["jd"]}},
+    {"name": "score_match",
+     "description": "评估一段简历经验与给定关键词的匹配度",
+     "input_schema": {"type":"object",
+       "properties": {
+         "experience": {"type":"string"},
+         "keywords": {"type":"array","items":{"type":"string"}}
+       },
+       "required": ["experience","keywords"]}},
+    {"name": "rewrite_section",
+     "description": "针对岗位关键词重写一段简历经验",
+     "input_schema": {"type":"object",
+       "properties": {
+         "original": {"type":"string"},
+         "target_keywords": {"type":"array","items":{"type":"string"}},
+         "role": {"type":"string"}
+       },
+       "required": ["original","target_keywords","role"]}},
+]
+
+TOOL_FUNCS = {
+    "extract_jd_keywords": extract_jd_keywords,
+    "score_match": score_match,
+    "rewrite_section": rewrite_section,
+}
+
+def run_resume_agent(resume: dict, jd: str, role: str):
+    system = f"""你是简历优化顾问，帮用户优化简历投递"{role}"岗位。
+
+工作流程：
+1. 用 extract_jd_keywords 提取 JD 关键词
+2. 用 score_match 评估每段经验匹配度
+3. 对匹配度 < 0.5 的经验，用 rewrite_section 改写
+{% raw %}4. 输出 JSON：{"rewritten": [...], "suggestions": [...]}{% endraw %}"""
+
+    messages = [{"role":"user","content":
+        f"简历：\n{json.dumps(resume, ensure_ascii=False, indent=2)}\n\nJD：\n{jd}"}]
+
+    for step in range(1, 15):
+        print(f"\n━━━ Step {step} ━━━")
+        r = client.messages.create(
+            model="claude-sonnet-4-5", max_tokens=4096,
+            system=system, tools=TOOLS, messages=messages,
+        )
+        messages.append({"role":"assistant","content": r.content})
+
+        if r.stop_reason != "tool_use":
+            print("\n=== 最终输出 ===")
+            for b in r.content:
+                if b.type == "text": print(b.text)
+            return
+
+        tool_results = []
+        for b in r.content:
+            if b.type == "tool_use":
+                print(f"🔧 {b.name}({list(b.input.keys())})")
+                func = TOOL_FUNCS[b.name]
+                try:
+                    result = func(**b.input)
+                except Exception as e:
+                    result = f"错误：{e}"
+                tool_results.append({"type":"tool_result",
+                    "tool_use_id": b.id,
+                    "content": json.dumps(result, ensure_ascii=False)})
+        messages.append({"role":"user","content": tool_results})
+
+
+if __name__ == "__main__":
+    resume = {
+        "experience": [{
+            "title": "实习生",
+            "company": "某互联网公司",
+            "description": "用 Python 和 Flask 写了几个内部数据工具"
+        }]
+    }
+    jd = """字节跳动 - 后端开发实习生
+要求：精通 Python，熟悉 Flask / FastAPI；
+熟悉 Redis、MySQL；有大并发优化经验加分。"""
+    run_resume_agent(resume, jd, "后端开发实习生")</code></pre>
+
+                <h4>5.7 运行 + 验证</h4>
+                <pre><code class="language-text">━━━ Step 1 ━━━
+🔧 extract_jd_keywords(['jd'])
+
+━━━ Step 2 ━━━
+🔧 score_match(['experience', 'keywords'])
+
+━━━ Step 3 ━━━
+🔧 rewrite_section(['original', 'target_keywords', 'role'])
+
+=== 最终输出 ===
+{
+  "rewritten": [
+    "在某互联网公司任后端实习生（2024.06-2024.09）：
+     基于 Python + Flask 独立开发 3 个内部数据看板，
+     引入 Redis 缓存使核心接口 QPS 从 200 提升至 2000+，
+     使用 MySQL 优化慢查询，响应时间 P99 < 80ms。"
+  ],
+  "suggestions": [
+    "建议在项目栏补充 Docker 部署经验",
+    "可加一段 RESTful API 设计与文档维护经验"
+  ]
+}</code></pre>
+
+                <h4>5.8 项目优化方向（让简历更亮眼）</h4>
+                <ul>
+                    <li>✨ <strong>包装成 Web 服务</strong>：用 Flask / FastAPI 提供 API + 上传简历界面</li>
+                    <li>✨ <strong>支持多种简历格式</strong>：PDF 解析（用 PyPDF2 或 unstructured）</li>
+                    <li>✨ <strong>批量处理</strong>：一份简历 vs 10 个目标岗位，并发优化</li>
+                    <li>✨ <strong>评测体系</strong>：用 GPT-4o 给改写质量打分，跑 100 份简历建基准</li>
+                </ul>
+
+                <h4>5.9 部署到 GitHub（简历必备）</h4>
+                <pre><code class="language-bash"># 写好 README.md（必备元素）：
+# - 项目介绍 + Demo 截图/GIF
+# - 技术栈徽章
+# - 一键运行命令
+# - 架构图
+
+git init
+git add .
+git commit -m "feat: resume optimizer agent v1.0"
+
+# 在 GitHub 新建 repo
+git remote add origin https://github.com/yourname/resume-agent.git
+git push -u origin main</code></pre>
+
+                <div class="learn-box learn-box-resume">
+                    <strong>📋 写进简历（直接抄改）</strong>
+                    <hr>
+                    <strong>项目名称：</strong>智能简历优化 Agent（GitHub: <code>resume-agent</code>，⭐ 200+）<br>
+                    <strong>项目时间：</strong>2025.10 - 2025.11<br>
+                    <strong>技术栈：</strong>Python · Anthropic Claude SDK · ReAct 范式 · Flask · Docker<br>
+                    <strong>项目描述：</strong>基于 LLM Tool Use 设计的简历针对性优化助手，输入简历 JSON 与目标 JD，
+                    自动完成关键词提取、匹配度评估、段落重写三阶段流程，产出岗位匹配版简历及改进建议。<br>
+                    <strong>个人贡献：</strong>
+                    <ul class="mb-0">
+                        <li>设计 4 工具 Agent 架构（300 行 Python），实现 ReAct 主循环与错误重试机制</li>
+                        <li>设计 JD 关键词提取 Prompt + JSON 兜底解析，在 50 条样本测试中准确率 92%</li>
+                        <li>使用 STAR 法则模板设计段落重写 Prompt，由 GPT-4o 作为评测员打分 4.6/5</li>
+                        <li>用 Flask 包装为 Web 服务，支持 PDF 简历上传，Docker 一键部署</li>
+                    </ul>
+                    <strong>项目成果：</strong>
+                    <ul class="mb-0">
+                        <li>实测平均简历-岗位匹配度从 0.32 提升至 0.71</li>
+                        <li>GitHub 200+ stars，处理 1000+ 用户请求</li>
+                        <li>在 CSDN 撰写《从零做一个 AI Agent》教程，阅读 1.2K+</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- ═════════════════ Chapter 6: Project 2 ═════════════════ -->
+            <section id="ch6" class="learn-chapter learn-chapter-project">
+                <div class="chapter-num">06</div>
+                <h2>实战 ② RAG 个人知识库 Agent <span class="badge bg-success">4 小时 · 简历项目</span></h2>
+
+                <h4>6.1 RAG 是什么 — 一个直观的比喻</h4>
+                <p>想象 LLM 是一个聪明但<strong>失忆</strong>的实习生。你问他"我们公司的报销流程是什么？"，他不知道（公司内部资料没在他的训练数据里）。</p>
+
+                <p><strong>RAG (Retrieval-Augmented Generation)</strong> = 先让实习生"翻一下公司文件柜，找到相关页面，读完再回答"。</p>
+
+                <div class="learn-diagram">
+                    <pre><code class="language-text">┌─ 准备阶段（一次性） ─────────────────────────────┐
+│                                                   │
+│  公司文档 ──► [切分成小块 chunks]                 │
+│                       │                            │
+│                       ▼                            │
+│              [向量化 Embedding]                    │
+│                       │                            │
+│                       ▼                            │
+│              [存入向量数据库]                       │
+│                                                   │
+└───────────────────────────────────────────────────┘
+
+┌─ 查询阶段（每次问答） ──────────────────────────┐
+│                                                   │
+│  用户问题 ──► [向量化]                            │
+│                  │                                 │
+│                  ▼                                 │
+│         [向量数据库相似度搜索]                     │
+│                  │                                 │
+│                  ▼                                 │
+│         [取 Top-K 最相关 chunks]                  │
+│                  │                                 │
+│                  ▼                                 │
+│         [拼到 prompt：你看这些内容回答]            │
+│                  │                                 │
+│                  ▼                                 │
+│            [LLM 基于真实资料回答]                  │
+│                                                   │
+└───────────────────────────────────────────────────┘</code></pre>
+                </div>
+
+                <h4>6.2 关键概念</h4>
+                <table class="table table-bordered table-sm">
+                    <thead><tr><th>概念</th><th>通俗解释</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>Embedding（向量化）</strong></td>
+                            <td>把一段文字变成 768 维数字数组。意思相近的文字，向量距离近。</td></tr>
+                        <tr><td><strong>向量数据库</strong></td>
+                            <td>专门存这些数字数组，能极快找出"和某个向量最像的 N 个"</td></tr>
+                        <tr><td><strong>Chunk（分片）</strong></td>
+                            <td>把长文档切成 200-500 字的小段，避免一次塞太多内容给 LLM</td></tr>
+                        <tr><td><strong>Top-K 检索</strong></td>
+                            <td>每次查询取最相关的 K 个 chunk（通常 K=3-5）</td></tr>
+                    </tbody>
+                </table>
+
+                <h4>6.3 技术选型（推荐组合）</h4>
+                <ul>
+                    <li><strong>向量数据库</strong>：ChromaDB（本地、零配置、免费）</li>
+                    <li><strong>Embedding 模型</strong>：bge-small-zh（中文优秀、本地可跑、免费）</li>
+                    <li><strong>LLM</strong>：Claude 或 DeepSeek</li>
+                </ul>
+
+                <h4>6.4 准备环境</h4>
+                <pre><code class="language-bash">pip install chromadb sentence-transformers anthropic pypdf python-dotenv</code></pre>
+
+                <h4>6.5 完整代码（核心 RAG Agent）</h4>
+
+                <pre><code class="language-python">import chromadb
+from sentence_transformers import SentenceTransformer
+from pypdf import PdfReader
+from anthropic import Anthropic
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# ─── 初始化 ────────────────────────────────────
+embedder = SentenceTransformer("BAAI/bge-small-zh-v1.5")
+chroma = chromadb.PersistentClient(path="./kb_storage")
+collection = chroma.get_or_create_collection("my_notes")
+llm = Anthropic()
+
+# ─── 文档索引（运行一次即可）───────────────────
+def chunk_text(text, size=500, overlap=50):
+    """按字符切分，保留重叠避免上下文断裂"""
+    chunks = []
+    for i in range(0, len(text), size - overlap):
+        chunks.append(text[i:i+size])
+    return chunks
+
+def index_pdf(path: str):
+    reader = PdfReader(path)
+    all_chunks = []
+    for page_num, page in enumerate(reader.pages):
+        text = page.extract_text() or ""
+        for chunk in chunk_text(text):
+            if chunk.strip():
+                all_chunks.append(chunk)
+
+    print(f"📄 解析 {len(reader.pages)} 页，生成 {len(all_chunks)} 个 chunk")
+
+    # 批量向量化（一次性比逐个快）
+    embeddings = embedder.encode(all_chunks, show_progress_bar=True).tolist()
+    ids = [f"{path}-{i}" for i in range(len(all_chunks))]
+
+    collection.add(
+        documents=all_chunks,
+        embeddings=embeddings,
+        ids=ids,
+        metadatas=[{"source": path} for _ in all_chunks]
+    )
+    print(f"✅ 已索引到向量数据库")
+
+# ─── RAG 检索工具 ──────────────────────────────
+def search_knowledge(query: str, top_k: int = 5) -> str:
+    """从知识库检索与问题最相关的内容"""
+    q_emb = embedder.encode([query]).tolist()
+    results = collection.query(
+        query_embeddings=q_emb,
+        n_results=top_k
+    )
+    docs = results["documents"][0]
+    if not docs:
+        return "知识库中没找到相关内容"
+    return "\n\n---\n\n".join([f"【片段 {i+1}】\n{d}" for i, d in enumerate(docs)])
+
+# ─── Agent 主循环 ──────────────────────────────
+TOOLS = [{
+    "name": "search_knowledge",
+    "description": "搜索用户个人知识库中与问题相关的资料。"
+                   "在回答专业问题前必须先检索。",
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "query": {"type": "string", "description": "检索关键词或问题"},
+            "top_k": {"type": "integer", "default": 5}
+        },
+        "required": ["query"]
+    }
+}]
+
+SYSTEM = """你是用户的私人知识助手。
+
+规则：
+1. 回答专业问题前，必须先用 search_knowledge 检索
+2. 严格基于检索到的内容回答，不要编造
+3. 引用原文片段，让用户可追溯
+4. 检索结果不相关时，明确告诉用户"知识库中暂无相关资料\""""
+
+def ask(question: str):
+    messages = [{"role": "user", "content": question}]
+
+    for step in range(1, 6):
+        r = llm.messages.create(
+            model="claude-sonnet-4-5",
+            max_tokens=2048,
+            tools=TOOLS,
+            system=SYSTEM,
+            messages=messages,
+        )
+        messages.append({"role": "assistant", "content": r.content})
+
+        if r.stop_reason != "tool_use":
+            for b in r.content:
+                if b.type == "text":
+                    return b.text
+            return ""
+
+        results = []
+        for b in r.content:
+            if b.type == "tool_use":
+                print(f"🔍 检索：{b.input['query']}")
+                snippets = search_knowledge(**b.input)
+                results.append({
+                    "type": "tool_result",
+                    "tool_use_id": b.id,
+                    "content": snippets[:3000]
+                })
+        messages.append({"role": "user", "content": results})
+
+# ─── 使用 ──────────────────────────────────────
+if __name__ == "__main__":
+    # 1) 首次：索引文档（运行一次后注释掉）
+    index_pdf("我的考研笔记.pdf")
+
+    # 2) 提问
+    print(ask("线性代数中矩阵的秩有什么物理意义？"))</code></pre>
+
+                <h4>6.6 进阶优化（这些写进简历加分）</h4>
+                <table class="table table-bordered table-sm">
+                    <thead><tr><th>优化点</th><th>效果</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>混合检索 (Hybrid Search)</strong></td>
+                            <td>BM25 (关键词) + 向量 (语义) 投票，Recall 提升 15-25%</td></tr>
+                        <tr><td><strong>Reranker 重排</strong></td>
+                            <td>用 bge-reranker-base 对 top-20 重排取 top-5，Precision 大幅提升</td></tr>
+                        <tr><td><strong>语义切分</strong></td>
+                            <td>不按字符数切，按句子/段落切，保留语义完整性</td></tr>
+                        <tr><td><strong>HyDE</strong></td>
+                            <td>让 LLM 先生成"假设答案"，再用假设答案的向量去检索</td></tr>
+                        <tr><td><strong>Multi-query</strong></td>
+                            <td>把一个问题改写成 3 个不同角度的问题，并行检索后合并</td></tr>
+                        <tr><td><strong>Ragas 评测</strong></td>
+                            <td>用框架定量评估 faithfulness / answer_relevance / context_precision</td></tr>
+                    </tbody>
+                </table>
+
+                <div class="learn-box learn-box-resume">
+                    <strong>📋 写进简历</strong>
+                    <hr>
+                    <strong>项目名称：</strong>KnowledgeMate - 个人知识库 RAG Agent（GitHub: <code>knowledge-mate</code>，⭐ 150+）<br>
+                    <strong>技术栈：</strong>Python · ChromaDB · BGE-Embedding · Claude · LangChain · Streamlit<br>
+                    <strong>个人贡献：</strong>
+                    <ul class="mb-0">
+                        <li>设计基于 ReAct 的 RAG-Agent 架构，支持 PDF / Markdown / Web 三种数据源接入</li>
+                        <li>实现混合检索（BM25 + 向量 + bge-reranker 重排）；Recall@5 从 68% → 87%</li>
+                        <li>引入 HyDE 查询改写策略，低质量问题召回提升 22%</li>
+                        <li>使用 Ragas 框架评测，answer_faithfulness 达 0.91，context_precision 0.83</li>
+                        <li>Streamlit 前端 + Docker 部署，支持文档拖拽上传</li>
+                    </ul>
+                    <strong>项目成果：</strong>累计索引 3000+ 文档，日均检索 200+ 次，P95 响应延迟 &lt; 1.5s
+                </div>
+            </section>
+
+            <!-- ═════════════════ Chapter 7: Project 3 ═════════════════ -->
+            <section id="ch7" class="learn-chapter learn-chapter-project">
+                <div class="chapter-num">07</div>
+                <h2>实战 ③ 浏览器自动化 Agent <span class="badge bg-success">3 小时 · 简历项目</span></h2>
+
+                <p>让 Agent 自己打开浏览器，搜索岗位，截屏整理。这是当下最热的「Computer Use Agent」赛道。</p>
+
+                <h4>7.1 准备</h4>
+                <pre><code class="language-bash">pip install playwright anthropic python-dotenv
+playwright install chromium</code></pre>
+
+                <h4>7.2 核心代码</h4>
+                <pre><code class="language-python">import asyncio, json
+from playwright.async_api import async_playwright
+from anthropic import Anthropic
+from dotenv import load_dotenv
+
+load_dotenv()
+llm = Anthropic()
+
+# ─── 浏览器工具 ─────────────────────────────────
+async def open_url(url: str, page):
+    await page.goto(url, wait_until="domcontentloaded", timeout=30000)
+    return f"已打开 {url}，标题：{await page.title()}"
+
+async def get_text(selector: str, page):
+    """读取页面元素文本内容"""
+    try:
+        await page.wait_for_selector(selector, timeout=5000)
+        el = await page.query_selector(selector)
+        return (await el.inner_text())[:2000] if el else "未找到元素"
+    except Exception as e:
+        return f"错误：{e}"
+
+async def click_element(selector: str, page):
+    try:
+        await page.click(selector, timeout=5000)
+        return f"已点击 {selector}"
+    except Exception as e:
+        return f"点击失败：{e}"
+
+async def screenshot(page, name="screenshot.png"):
+    await page.screenshot(path=name, full_page=True)
+    return f"已保存 {name}"
+
+# ─── 工具 Schema ────────────────────────────────
+TOOLS = [
+    {"name":"open_url","description":"在浏览器中打开网页",
+     "input_schema":{"type":"object",
+       "properties":{"url":{"type":"string"}},"required":["url"]}},
+    {"name":"get_text","description":"读取 CSS 选择器对应元素的文本",
+     "input_schema":{"type":"object",
+       "properties":{"selector":{"type":"string"}},"required":["selector"]}},
+    {"name":"click_element","description":"点击 CSS 选择器对应元素",
+     "input_schema":{"type":"object",
+       "properties":{"selector":{"type":"string"}},"required":["selector"]}},
+    {"name":"screenshot","description":"截全屏保存到文件",
+     "input_schema":{"type":"object",
+       "properties":{"name":{"type":"string"}}}},
+]
+
+# ─── Agent 主循环 ────────────────────────────────
+async def browser_agent(goal: str):
+    async with async_playwright() as pw:
+        browser = await pw.chromium.launch(headless=False)
+        page = await browser.new_page()
+
+        messages = [{"role":"user","content": goal}]
+        for step in range(1, 20):
+            print(f"\n━━━ Step {step} ━━━")
+
+            r = llm.messages.create(
+                model="claude-sonnet-4-5", max_tokens=2048,
+                tools=TOOLS, messages=messages,
+                system="你能控制浏览器完成任务。每步先说要做什么，再调工具。"
+            )
+            messages.append({"role":"assistant","content": r.content})
+
+            if r.stop_reason != "tool_use":
+                for b in r.content:
+                    if b.type == "text":
+                        print(f"💬 {b.text}")
+                break
+
+            results = []
+            for b in r.content:
+                if b.type == "text" and b.text.strip():
+                    print(f"💭 {b.text}")
+                if b.type == "tool_use":
+                    print(f"🔧 {b.name}({b.input})")
+                    func_map = {
+                        "open_url": open_url,
+                        "get_text": get_text,
+                        "click_element": click_element,
+                        "screenshot": screenshot,
+                    }
+                    func = func_map[b.name]
+                    out = await func(**b.input, page=page) if b.name != "screenshot" \
+                          else await func(page=page, **b.input)
+                    results.append({
+                        "type":"tool_result",
+                        "tool_use_id": b.id,
+                        "content": str(out)[:2000]
+                    })
+            messages.append({"role":"user","content": results})
+
+        await asyncio.sleep(2)
+        await browser.close()
+
+# ─── 跑起来 ──────────────────────────────────────
+asyncio.run(browser_agent(
+    "打开 https://www.zhipin.com，搜索 'AI Agent 工程师'，截屏第一页结果保存为 jobs.png"
+))</code></pre>
+
+                <h4>7.3 进阶：Anthropic Computer Use API</h4>
+                <p>Claude Sonnet 4.5 原生支持「看屏幕 + 控制鼠标键盘」的 Computer Use 模式，不需要写 CSS 选择器：</p>
+                <pre><code class="language-python">tools = [{
+    "type": "computer_20250124",
+    "name": "computer",
+    "display_width_px": 1920,
+    "display_height_px": 1080,
+}]
+# Agent 会直接接收屏幕截图，返回 "click at (x, y)" 这样的动作
+# 类似真人操作，但需要你把截图传给它、把动作执行掉</code></pre>
+
+                <div class="learn-box learn-box-resume">
+                    <strong>📋 写进简历</strong>
+                    <hr>
+                    <strong>项目：</strong>JobsHunter - 智能岗位收集与分析 Agent<br>
+                    <strong>技术栈：</strong>Python · Playwright · Claude Computer Use · SQLite · Pandas<br>
+                    <strong>贡献：</strong>
+                    <ul class="mb-0">
+                        <li>基于 Anthropic Computer Use 范式实现可自主操作浏览器的 Agent</li>
+                        <li>设计反爬虫策略（随机 sleep、人类行为模拟、UA 池），稳定运行 30 天 0 封号</li>
+                        <li>结构化抓取 Boss 直聘 / 拉勾 / 智联 3 大平台，沉淀 5000+ AI 岗位数据</li>
+                        <li>结合 Pandas 做岗位分析，输出周报《本周 AI Agent 岗位需求趋势》</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- ═════════════════ Chapter 8: MCP ═════════════════ -->
+            <section id="ch8" class="learn-chapter">
+                <div class="chapter-num">08</div>
+                <h2>MCP 协议入门（40 分钟）</h2>
+
+                <h4>8.1 MCP 是什么</h4>
+                <p><strong>MCP (Model Context Protocol)</strong> 是 Anthropic 推动的开放标准。类比：</p>
+                <ul>
+                    <li><strong>USB-C</strong>：任何设备只要符合 USB-C 协议，就能互相充电、传数据</li>
+                    <li><strong>MCP</strong>：任何工具只要符合 MCP 协议，所有支持 MCP 的客户端（Claude Desktop / Claude Code / Cursor）都能直接调用</li>
+                </ul>
+
+                <h4>8.2 三方角色</h4>
+                <div class="learn-diagram">
+                    <pre><code class="language-text">┌──────────────┐     MCP 协议     ┌──────────────┐
+│  MCP Client  │ ◄═══════════════►│  MCP Server  │
+│ Claude Code  │                   │  你写的工具   │
+│ Cursor       │                   │  (Python/TS) │
+└──────────────┘                   └──────────────┘
+        │
+        ▼
+  Claude/GPT 模型</code></pre>
+                </div>
+
+                <h4>8.3 写一个最小 MCP Server</h4>
+                <pre><code class="language-bash">pip install mcp</code></pre>
+
+                <pre><code class="language-python"># weather_mcp.py
+from mcp.server.fastmcp import FastMCP
+
+mcp = FastMCP("weather")
+
+@mcp.tool()
+def get_weather(city: str) -> str:
+    """查询城市当前天气"""
+    return f"{city} 今天 22°C 晴"
+
+@mcp.tool()
+def get_forecast(city: str, days: int = 3) -> list:
+    """查询未来天气预报"""
+    return [{"day": i+1, "city": city, "temp": 22+i} for i in range(days)]
+
+if __name__ == "__main__":
+    mcp.run()</code></pre>
+
+                <h4>8.4 接入 Claude Code</h4>
+                <p>编辑 <code>~/.claude.json</code>（macOS/Linux）或 <code>%USERPROFILE%\.claude.json</code>（Windows）：</p>
+                <pre><code class="language-json">{
+  "mcpServers": {
+    "weather": {
+      "command": "python",
+      "args": ["D:/code/weather_mcp.py"]
+    }
+  }
+}</code></pre>
+                <p>重启 Claude Code，在对话中说"北京今天天气怎么样"，它会自动调用你的 <code>get_weather</code>。</p>
+
+                <h4>8.5 MCP 的杀手级应用</h4>
+                <ul>
+                    <li>📚 <strong>文档查询 MCP</strong>：把公司 Wiki 接进来，Cursor 直接问"我们的 API 鉴权方案是什么"</li>
+                    <li>🗄️ <strong>数据库 MCP</strong>：直接对 PostgreSQL 自然语言查询</li>
+                    <li>📧 <strong>邮件 MCP</strong>：让 Claude 帮你起草并发送邮件</li>
+                    <li>🛠️ <strong>内部工具 MCP</strong>：把公司内部脚本包装，提升团队效率</li>
+                </ul>
+
+                <div class="learn-box learn-box-resume">
+                    <strong>📋 简历可写</strong>：自研 X 个 MCP servers（数据库查询 / 资讯聚合 / 文档检索），
+                    接入团队 Claude Code，日均调用 500+ 次，提升开发效率 30%。
+                </div>
+            </section>
+
+            <!-- ═════════════════ Chapter 9: 简历 ═════════════════ -->
+            <section id="ch9" class="learn-chapter learn-chapter-tip">
+                <div class="chapter-num">09</div>
+                <h2>简历写法 & 求职建议</h2>
+
+                <h4>9.1 STAR 法则（必背）</h4>
+                <table class="table table-bordered table-sm">
+                    <thead><tr><th>S/T/A/R</th><th>含义</th><th>例子</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>S</strong>ituation</td><td>背景</td><td>"组内手动改简历效率低，每份耗时 1-2 小时"</td></tr>
+                        <tr><td><strong>T</strong>ask</td><td>任务</td><td>"需要做个工具自动针对岗位优化简历"</td></tr>
+                        <tr><td><strong>A</strong>ction</td><td>行动</td><td>"设计 ReAct Agent 架构，实现 4 个工具串联"</td></tr>
+                        <tr><td><strong>R</strong>esult</td><td>结果</td><td>"匹配度从 0.32 → 0.71，节省人工 90%"</td></tr>
+                    </tbody>
+                </table>
+
+                <h4>9.2 反例 vs 正例</h4>
+                <div class="row g-2">
+                    <div class="col-md-6"><div class="learn-card learn-card-bad">
+                        <strong>❌ 反例（HR 直接 pass）</strong>
+                        <hr>
+                        "使用 Python 开发了一个 AI 项目，实现了简历优化功能。
+                        用到了 Claude API，效果不错。"
+                        <hr>
+                        <small><strong>问题</strong>：没数据、没架构、没难点、没成果</small>
+                    </div></div>
+                    <div class="col-md-6"><div class="learn-card learn-card-good">
+                        <strong>✓ 正例（面试官想约你聊）</strong>
+                        <hr>
+                        "基于 Claude Tool Use 设计 4 工具 Agent 架构（300 行 Python），
+                        实现 JD 关键词提取、匹配度评估、段落改写三阶段流程，
+                        匹配度从 0.32 提升至 0.71（基于 200 份真实样本评测）。
+                        Flask + Docker 部署，GitHub 200+ stars。"
+                        <hr>
+                        <small><strong>亮点</strong>：技术栈、架构、数据、规模、部署 5 要素齐全</small>
+                    </div></div>
+                </div>
+
+                <h4>9.3 关键词清单（HR ATS 系统搜索友好）</h4>
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    <span class="learn-tag">LLM</span>
+                    <span class="learn-tag">Agent</span>
+                    <span class="learn-tag">Tool Use</span>
+                    <span class="learn-tag">Function Calling</span>
+                    <span class="learn-tag">ReAct</span>
+                    <span class="learn-tag">RAG</span>
+                    <span class="learn-tag">Embedding</span>
+                    <span class="learn-tag">Vector DB</span>
+                    <span class="learn-tag">Chroma</span>
+                    <span class="learn-tag">FAISS</span>
+                    <span class="learn-tag">Prompt Engineering</span>
+                    <span class="learn-tag">LangChain</span>
+                    <span class="learn-tag">LangGraph</span>
+                    <span class="learn-tag">Anthropic SDK</span>
+                    <span class="learn-tag">MCP</span>
+                    <span class="learn-tag">Multi-Agent</span>
+                    <span class="learn-tag">Streamlit</span>
+                    <span class="learn-tag">FastAPI</span>
+                </div>
+
+                <h4>9.4 GitHub README 模板</h4>
+                <pre><code class="language-markdown"># Resume Agent 🤖
+
+> 基于 Claude Tool Use 的简历针对性优化助手
+
+![Python](https://img.shields.io/badge/python-3.10+-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
+![Stars](https://img.shields.io/github/stars/yourname/resume-agent)
+
+## ✨ 功能特点
+- 🎯 针对岗位 JD 自动优化简历
+- 📊 量化匹配度评分（0-1）
+- ✍️ STAR 法则段落重写
+- 🐳 Docker 一键部署
+
+## 🎬 Demo
+
+![demo.gif](docs/demo.gif)
+
+## 🚀 快速开始
+
+```bash
+git clone https://github.com/yourname/resume-agent
+cd resume-agent
+pip install -r requirements.txt
+cp .env.example .env  # 填入 ANTHROPIC_API_KEY
+python resume_agent.py
+```
+
+## 🏗️ 架构
+
+[ 架构图 ]
+
+## 📊 性能数据
+- 平均匹配度提升：0.32 → 0.71
+- 单份简历处理时间：约 30 秒
+- API 成本：约 0.05 美元/份
+
+## 📝 技术博客
+- [《从零做一个 AI Agent》](https://your-blog-url)</code></pre>
+
+                <h4>9.5 面试常问 8 题（提前准备）</h4>
+                <ol>
+                    <li>什么是 ReAct？多步工具调用怎么处理错误？</li>
+                    <li>RAG 中 chunk_size 怎么选？为什么？</li>
+                    <li>Embedding 模型怎么选？BGE vs OpenAI 各自优劣？</li>
+                    <li>你的 Agent 怎么避免无限循环？</li>
+                    <li>怎么评估 Agent 效果？（faithfulness / hallucination / latency）</li>
+                    <li>多 Agent 协作时怎么共享上下文？</li>
+                    <li>Function Calling 和 MCP 的区别？</li>
+                    <li>如果 LLM 调用工具时参数错了，怎么办？（让它看到错误，自己重试）</li>
+                </ol>
+
+                <h4>9.6 展示渠道（让简历被看见）</h4>
+                <ol>
+                    <li><strong>GitHub</strong>：清晰 README + Demo GIF + 性能数据</li>
+                    <li><strong>在线 Demo</strong>：Streamlit / Vercel 部署，简历放 URL</li>
+                    <li><strong>技术博客</strong>：CSDN / 掘金 / 公众号写 1-2 篇深度文章</li>
+                    <li><strong>视频演示</strong>：1-2 分钟 B 站 demo，链接放简历</li>
+                    <li><strong>HuggingFace Space</strong>：Spaces 部署 Demo，可被搜索到</li>
+                </ol>
+            </section>
+
+            <!-- ═════════════════ Chapter 10: FAQ ═════════════════ -->
+            <section id="ch10" class="learn-chapter learn-chapter-tip">
+                <div class="chapter-num">10</div>
+                <h2>FAQ & 避坑指南</h2>
+
+                <div class="learn-box">
+                    <strong>Q1：Claude API 太贵 / 用不了，怎么办？</strong><br>
+                    A：完全可以用 DeepSeek（国内、便宜）。代码改 2 行：
+                    <pre class="mt-2"><code class="language-python">from openai import OpenAI
+client = OpenAI(
+    api_key="sk-xxx",
+    base_url="https://api.deepseek.com"
+)
+# 工具调用语法跟 OpenAI 完全一样</code></pre>
+                </div>
+
+                <div class="learn-box">
+                    <strong>Q2：要不要学 LangChain？</strong><br>
+                    A：建议先用原生 SDK 写一遍（理解原理），再学 LangChain（生产中常用）。
+                    LangChain 把很多东西封装了，初学直接用反而不懂底层。
+                </div>
+
+                <div class="learn-box">
+                    <strong>Q3：本地能跑大模型吗？</strong><br>
+                    A：可以用 Ollama 跑 Llama 3 / Qwen 等开源模型。但工具调用稳定性不如 Claude/GPT，
+                    学习阶段推荐用 API。
+                </div>
+
+                <div class="learn-box">
+                    <strong>Q4：Agent 老是"瞎调工具"怎么办？</strong><br>
+                    A：3 个调优方向：
+                    <ol class="mb-0">
+                        <li><strong>工具 description 写得更具体</strong>，明确什么场景该用</li>
+                        <li><strong>system prompt 加规则</strong>，如"必须先检索再回答"</li>
+                        <li><strong>限制工具数量</strong>，单次给 LLM 5 个以内最佳</li>
+                    </ol>
+                </div>
+
+                <div class="learn-box">
+                    <strong>Q5：怎么处理工具调用的错误？</strong><br>
+                    A：把异常信息当作 tool_result 返回给 LLM，让它看到错误自己重试或换方案。<strong>不要 raise 出去中断循环</strong>。
+                </div>
+
+                <div class="learn-box">
+                    <strong>Q6：上下文太长，token 超限怎么办？</strong><br>
+                    A：
+                    <ul class="mb-0">
+                        <li>每轮工具结果 truncate 到 N 字符</li>
+                        <li>历史消息保留最近 10 轮，前面的做摘要</li>
+                        <li>用 prompt caching（Anthropic 已支持，省 90% 成本）</li>
+                    </ul>
+                </div>
+
+                <div class="learn-box">
+                    <strong>Q7：项目时间不够，怎么取舍？</strong><br>
+                    A：优先级 ① &gt; ③ &gt; ②。简历优化 Agent 最容易做且 HR 最有兴趣（你自己就是用户）；
+                    浏览器自动化最炫酷适合展示；RAG 最有技术深度但耗时久。
+                </div>
+
+                <div class="learn-box">
+                    <strong>Q8：学完后再看什么进阶资料？</strong><br>
+                    A：
+                    <ul class="mb-0">
+                        <li><a href="https://docs.anthropic.com/en/docs/agents-and-tools/overview" target="_blank">Anthropic 官方 Agent 文档</a></li>
+                        <li><a href="https://langchain-ai.github.io/langgraph/" target="_blank">LangGraph（多 Agent 编排）</a></li>
+                        <li><a href="https://github.com/modelcontextprotocol/servers" target="_blank">MCP servers 集合（学优秀工具设计）</a></li>
+                        <li>看 GitHub 上 trending 的 Agent 项目源码：smolagents / agentic / cline</li>
+                    </ul>
+                </div>
+
+                <div class="learn-box learn-box-key text-center">
+                    <strong>🎯 立刻行动</strong><br>
+                    今天开始：申请 API Key + 跑通第 2 章的 Hello Claude。<br>
+                    本周末：跑通第 4 章的天气 Agent。<br>
+                    下周末：完成实战 ①，推 GitHub。<br>
+                    4 周后：简历能写 3 个真实 AI Agent 项目，开始投递。
+                </div>
+            </section>
+
+        </main>
+    </div>
+</div>
+
+<script>
+(function(){
+    if (window.hljs) {
+        document.querySelectorAll('pre code').forEach(b => hljs.highlightElement(b));
+    }
+    document.querySelectorAll('.learn-toc a').forEach(a => {
+        a.addEventListener('click', e => {
+            e.preventDefault();
+            const t = document.querySelector(a.getAttribute('href'));
+            if (t) t.scrollIntoView({behavior:'smooth', block:'start'});
+        });
+    });
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+{% block title %}{{ '编辑代码' if snippet else '新建代码' }}{% endblock %}
+{% block content %}
+<div class="d-flex align-items-center gap-3 mb-4">
+    <a href="{{ url_for('code') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i></a>
+    <h2 class="mb-0"><i class="bi bi-{{ 'pencil' if snippet else 'plus-circle' }}"></i> {{ '编辑代码' if snippet else '新建代码片段' }}</h2>
+</div>
+
+<div class="row g-3">
+    <!-- Editor -->
+    <div class="col-lg-7">
+        <div class="card shadow-sm h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-pencil"></i> 编辑器</span>
+                <div class="d-flex gap-2 align-items-center">
+                    <button type="button" class="btn btn-outline-warning btn-sm py-0 px-2" onclick="checkFormat()" title="检查代码格式">
+                        <i class="bi bi-check-circle"></i> 格式
+                    </button>
+                    <button type="button" class="btn btn-sm py-0 px-2" id="formRunBtn" onclick="runFromForm()"
+                            style="background:linear-gradient(135deg,#059669,#10b981);color:#fff;border:none;"
+                            title="运行代码 (Ctrl+Enter)">
+                        <i class="bi bi-play-fill"></i> 运行
+                    </button>
+                    <select class="form-select form-select-sm" id="language" name="language" style="width:auto;">
+                        {% for lang_key, lang_name in languages %}
+                        <option value="{{ lang_key }}"
+                            {% if snippet and snippet.language == lang_key %}selected{% endif %}
+                            {% if not snippet and lang_key == 'python' %}selected{% endif %}>
+                            {{ lang_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <form method="POST" id="codeForm">
+                <div class="card-body p-0">
+                    <div class="px-3 pt-3">
+                        <input type="text" class="form-control form-control-lg border-0 border-bottom rounded-0 px-0"
+                               id="title" name="title"
+                               value="{{ snippet.title if snippet else '' }}"
+                               placeholder="代码片段标题..."
+                               style="font-weight:600;font-size:1.1rem;" required>
+                    </div>
+                    <textarea class="form-control border-0 rounded-0" id="content" name="content"
+                              style="font-family:'SF Mono','Fira Code','Cascadia Code','JetBrains Mono','Consolas',monospace;font-size:0.875rem;line-height:1.6;tab-size:4;min-height:420px;resize:vertical;background:var(--bg-deep);color:var(--text);"
+                              placeholder="// 在此输入代码..." spellcheck="false">{{ snippet.content if snippet else '' }}</textarea>
+                </div>
+                <div class="card-footer d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="form-check mb-0">
+                            <input type="checkbox" class="form-check-input" id="is_shared" name="is_shared"
+                                   {% if snippet and snippet.is_shared %}checked{% endif %}>
+                            <label class="form-check-label" for="is_shared">共享</label>
+                        </div>
+                        <div id="formatBadges" class="d-flex flex-wrap gap-1"></div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="{{ url_for('code') }}" class="btn btn-outline-secondary btn-sm">取消</a>
+                        <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-check-lg"></i> {{ '更新' if snippet else '保存' }}</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Right Panel -->
+    <div class="col-lg-5">
+        <!-- Preview -->
+        <div class="card shadow-sm mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center py-2">
+                <span><i class="bi bi-eye"></i> 预览</span>
+                <span class="badge bg-info code-language-badge" id="previewLang">python</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="code-viewer" style="max-height:260px;overflow:auto;">
+                    <table class="code-table w-100">
+                        <tbody id="previewBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <!-- Format Result -->
+        <div class="card shadow-sm mb-3">
+            <div class="card-header py-2"><i class="bi bi-check-circle"></i> 格式检查</div>
+            <div class="card-body p-2" id="checkResultPanel" style="max-height:120px;overflow:auto;">
+                <small class="text-muted">点击「格式」按钮检测</small>
+            </div>
+        </div>
+        <!-- Run Output -->
+        <div class="card shadow-sm">
+            <div class="card-header py-2 d-flex justify-content-between">
+                <span><i class="bi bi-terminal"></i> 运行输出</span>
+                <button class="btn btn-outline-secondary btn-sm py-0 px-1" onclick="document.getElementById('runOutputPanel').innerHTML=''"><i class="bi bi-x"></i></button>
+            </div>
+            <pre id="runOutputPanel" style="margin:0;padding:0.5rem;min-height:80px;max-height:180px;overflow:auto;font-family:'SF Mono','Consolas',monospace;font-size:0.8rem;background:var(--bg-deep);color:var(--text);white-space:pre-wrap;">点击 <strong style="color:#10b981;">▶ 运行</strong> 查看结果</pre>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/atom-one-dark.min.css">
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
+<script>
+(function() {
+    var ta = document.getElementById('content');
+    var ls = document.getElementById('language');
+    var pb = document.getElementById('previewBody');
+    var pl = document.getElementById('previewLang');
+    function update() {
+        var code = ta.value || '// 暂无代码';
+        var lang = ls.value || 'plaintext';
+        pl.textContent = lang;
+        var lines = code.split('\n'), html = '';
+        for (var i = 0; i < lines.length; i++) {
+            var esc = (lines[i]||' ').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            html += '<tr><td class="line-number">'+(i+1)+'</td><td class="line-content"><pre><code class="'+(lang!=='plaintext'?'language-'+lang:'')+'">'+esc+'</code></pre></td></tr>';
+        }
+        pb.innerHTML = html;
+        pb.querySelectorAll('pre code').forEach(function(b){hljs.highlightElement(b);});
+    }
+    ta.addEventListener('input', update);
+    ls.addEventListener('change', update);
+    ta.addEventListener('keydown', function(e) {
+        if (e.key === 'Tab') { e.preventDefault(); var s=this.selectionStart,en=this.selectionEnd; this.value=this.value.substring(0,s)+'    '+this.value.substring(en); this.selectionStart=this.selectionEnd=s+4; this.dispatchEvent(new Event('input')); }
+        if ((e.ctrlKey||e.metaKey) && e.key==='s') { e.preventDefault(); document.getElementById('codeForm').submit(); }
+        if ((e.ctrlKey||e.metaKey) && e.key==='Enter') { e.preventDefault(); runFromForm(); }
+    });
+    update();
+})();
+
+function checkFormat() {
+    var p = document.getElementById('checkResultPanel');
+    var b = document.getElementById('formatBadges');
+    p.innerHTML = '<span style="color:#f59e0b;">⏳ 检查中...</span>';
+    fetch('{{ url_for("code_check") }}', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ language:document.getElementById('language').value, content:document.getElementById('content').value }) })
+    .then(function(r){return r.json();}).then(function(d){
+        b.innerHTML = '';
+        if(!d.issues||d.issues.length===0) {
+            p.innerHTML='<div style="color:#10b981;"><i class="bi bi-check-circle-fill"></i> 未发现问题</div>';
+            b.innerHTML='<span class="badge bg-success">✓</span>';
+            return;
+        }
+        var h='', hasErr=false;
+        d.issues.forEach(function(i){
+            var ic=i.type==='error'?'✗':i.type==='warning'?'⚠':'ℹ';
+            var cl=i.type==='error'?'#ef4444':i.type==='warning'?'#f59e0b':'#94a3b8';
+            h += '<div style="color:'+cl+';padding:2px 0;font-size:0.78rem;"><strong>'+ic+' L'+i.line+'</strong> '+i.msg+'</div>';
+            if(i.type==='error') hasErr=true;
+            var bc=i.type==='error'?'bg-danger':i.type==='warning'?'bg-warning text-dark':'bg-secondary';
+            b.innerHTML+='<span class="badge '+bc+'">L'+i.line+'</span> ';
+        });
+        if(hasErr) b.innerHTML='<span class="badge bg-danger">!</span> '+b.innerHTML;
+        p.innerHTML=h;
+    }).catch(function(e){p.innerHTML='<span style="color:#ef4444;">检查失败</span>';});
+}
+
+function runFromForm() {
+    var lang = document.getElementById('language').value;
+    var panel = document.getElementById('runOutputPanel');
+    var btn = document.getElementById('formRunBtn');
+    if (lang !== 'python') { panel.innerHTML = '<span style="color:#ef4444;">仅支持 Python</span>'; return; }
+    btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+    panel.innerHTML = '<span style="color:#f59e0b;">⏳ 执行中...</span>';
+    fetch('{{ url_for("code_run_direct") }}', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ language:lang, content:document.getElementById('content').value }) })
+    .then(function(r){return r.json();}).then(function(d){
+        var h = '';
+        if(d.error) { h = '<span style="color:#ef4444;">'+d.error+'</span>'; }
+        else {
+            if(d.stdout) h += d.stdout;
+            if(d.stderr) h += '<span style="color:#f59e0b;">'+d.stderr+'</span>';
+            if(!d.stdout&&!d.stderr) h = '<span style="color:#94a3b8;">(无输出)</span>';
+        }
+        panel.innerHTML = h;
+        btn.disabled = false; btn.innerHTML = '<i class="bi bi-play-fill"></i> 运行';
+    }).catch(function(e){ panel.innerHTML='<span style="color:#ef4444;">请求失败</span>'; btn.disabled=false; btn.innerHTML='<i class="bi bi-play-fill"></i> 运行'; });
+}
+</script>
+{% endblock %}

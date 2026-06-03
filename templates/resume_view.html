@@ -1,0 +1,373 @@
+{% extends "base.html" %}
+{% block title %}预览 · {{ resume.title }}{% endblock %}
+{% block content %}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2 no-print">
+    <div class="d-flex align-items-center gap-2">
+        <a href="{{ url_for('resume_list') }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i> 列表</a>
+        <h5 class="mb-0">{{ resume.title }}</h5>
+        {% if resume.target_company %}<span class="badge bg-info">{{ resume.target_company }}</span>{% endif %}
+        {% if resume.target_role %}<span class="badge bg-secondary">{{ resume.target_role }}</span>{% endif %}
+    </div>
+    <div class="d-flex gap-2 align-items-center flex-wrap">
+        <div class="btn-group btn-group-sm tpl-switch" role="group" aria-label="模板">
+            <button type="button" class="btn btn-outline-secondary tpl-btn active" data-tpl="classic">经典</button>
+            <button type="button" class="btn btn-outline-secondary tpl-btn" data-tpl="modern">现代</button>
+            <button type="button" class="btn btn-outline-secondary tpl-btn" data-tpl="compact">紧凑</button>
+            <button type="button" class="btn btn-outline-secondary tpl-btn" data-tpl="timeline">时间线</button>
+            <button type="button" class="btn btn-outline-secondary tpl-btn" data-tpl="elegant">优雅</button>
+            <button type="button" class="btn btn-outline-secondary tpl-btn" data-tpl="minimal">极简</button>
+            <button type="button" class="btn btn-outline-secondary tpl-btn" data-tpl="academic">学术</button>
+        </div>
+        <button type="button" class="btn btn-sm btn-outline-secondary" id="tplPanelToggle"><i class="bi bi-sliders"></i> 排版</button>
+        <a href="{{ url_for('resume_edit', resume_id=resume.id) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i> 编辑</a>
+        <button type="button" class="btn btn-sm btn-primary" onclick="window.print()"><i class="bi bi-file-earmark-pdf"></i> 导出 PDF / 打印</button>
+    </div>
+</div>
+
+<div id="page-warn-alert" class="alert alert-warning no-print mb-2" style="display:none;font-size:0.85rem;">
+    <i class="bi bi-exclamation-triangle"></i> <strong>内容超出 1 页</strong>，建议点击右上 <i class="bi bi-sliders"></i> 排版 → "一键适配 1 页"。
+</div>
+
+<div id="tplPanel" class="card no-print mb-3" style="display:none;">
+    <div class="card-body p-3">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label small mb-1 d-flex justify-content-between"><span>字号</span><span id="lbl-font-size" class="text-muted">100%</span></label>
+                <input type="range" class="form-range" id="cfg-font-size" min="80" max="150" step="1">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small mb-1 d-flex justify-content-between"><span>行距</span><span id="lbl-line-height" class="text-muted">1.55</span></label>
+                <input type="range" class="form-range" id="cfg-line-height" min="1.0" max="2.8" step="0.05">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small mb-1 d-flex justify-content-between"><span>段距</span><span id="lbl-section-gap" class="text-muted">5mm</span></label>
+                <input type="range" class="form-range" id="cfg-section-gap" min="1" max="20" step="1">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small mb-1">字体</label>
+                <select class="form-select form-select-sm" id="cfg-font-family">
+                    <option value="sans">无衬线</option>
+                    <option value="serif">英文衬线</option>
+                    <option value="songti">中文宋体</option>
+                    <option value="heiti">中文黑体</option>
+                    <option value="mono">等宽</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small mb-1">页边距</label>
+                <select class="form-select form-select-sm" id="cfg-page-margin">
+                    <option value="narrow">窄</option>
+                    <option value="default">默认</option>
+                    <option value="wide">宽</option>
+                </select>
+            </div>
+            <div class="col-12 d-flex gap-2 pt-2 border-top">
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="styleResetBtn"><i class="bi bi-arrow-counterclockwise"></i> 恢复默认</button>
+                <button type="button" class="btn btn-sm btn-outline-info" id="styleAutoFitBtn"><i class="bi bi-magic"></i> 一键适配 1 页</button>
+                <button type="button" class="btn btn-sm btn-primary ms-auto" id="styleSaveBtn"><i class="bi bi-save"></i> 保存设置</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="alert alert-info no-print mb-3" style="font-size:0.85rem;">
+    <i class="bi bi-info-circle"></i>
+    点击 <strong>导出 PDF</strong>，打印窗口选"另存为 PDF"、纸张 <strong>A4</strong>、边距 <strong>默认</strong>、勾选 <strong>背景图形</strong>。
+</div>
+
+<div class="resume-page-wrap">
+    <div id="resumeDoc" class="resume-doc tpl-classic">
+        {% set b = data.basics %}
+        {% set photo = resume_photo_url(resume, b.photo) %}
+        <header class="rp-header {% if photo %}rp-has-photo{% endif %}">
+            {% if photo %}<img class="rp-photo rp-photo-{{ b.photo_shape or 'square' }}" src="{{ photo }}" alt="证件照">{% endif %}
+            <div class="rp-header-text">
+                <h1>{{ b.name or '你的名字' }}</h1>
+                {% if b.title %}<div class="rp-subtitle">{{ b.title }}</div>{% endif %}
+                <div class="rp-meta">
+                    {% if b.phone %}<span><i class="bi bi-telephone"></i> {{ b.phone }}</span>{% endif %}
+                    {% if b.email %}<span><i class="bi bi-envelope"></i> {{ b.email }}</span>{% endif %}
+                    {% if b.location %}<span><i class="bi bi-geo-alt"></i> {{ b.location }}</span>{% endif %}
+                    {% for lk in b.links %}{% if lk.url %}<span><a href="{{ lk.url }}">{{ lk.label or lk.url }}</a></span>{% endif %}{% endfor %}
+                </div>
+            </div>
+        </header>
+
+        {% if data.summary %}
+        <section class="rp-section rp-summary">
+            <h2>个人简介</h2>
+            <p>{{ data.summary | replace('\n', '<br>') | safe }}</p>
+        </section>
+        {% endif %}
+
+        {% set edu_filled = data.education | selectattr('school') | list %}
+        {% if edu_filled %}
+        <section class="rp-section rp-education">
+            <h2>教育经历</h2>
+            {% for e in edu_filled %}
+            <div class="rp-item">
+                <div class="rp-row"><strong>{{ e.school }}</strong><span>{{ e.start }} - {{ e.end }}</span></div>
+                <div class="rp-row"><span>{{ e.degree }}{% if e.major %} · {{ e.major }}{% endif %}</span><span>{{ e.gpa }}</span></div>
+                {% if e.description %}<div class="rp-desc">{{ e.description | replace('\n','<br>') | safe }}</div>{% endif %}
+            </div>
+            {% endfor %}
+        </section>
+        {% endif %}
+
+        {% set exp_filled = data.experience | selectattr('company') | list %}
+        {% if exp_filled %}
+        <section class="rp-section rp-experience">
+            <h2>工作经历</h2>
+            {% for e in exp_filled %}
+            <div class="rp-item">
+                <div class="rp-row"><strong>{{ e.company }}{% if e.title %} · {{ e.title }}{% endif %}</strong><span>{{ e.start }} - {{ e.end }}</span></div>
+                {% if e.location %}<div class="rp-row rp-row-muted"><span>{{ e.location }}</span></div>{% endif %}
+                {% if e.description %}<div class="rp-desc">{{ e.description | replace('\n','<br>') | safe }}</div>{% endif %}
+            </div>
+            {% endfor %}
+        </section>
+        {% endif %}
+
+        {% set proj_filled = data.projects | selectattr('name') | list %}
+        {% if proj_filled %}
+        <section class="rp-section rp-projects">
+            <h2>项目经历</h2>
+            {% for p in proj_filled %}
+            <div class="rp-item">
+                <div class="rp-row"><strong>{{ p.name }}{% if p.role %} · {{ p.role }}{% endif %}</strong><span>{{ p.start }} - {{ p.end }}</span></div>
+                {% if p.tech %}<div class="rp-row rp-row-muted"><span>技术栈：{{ p.tech }}</span></div>{% endif %}
+                {% if p.description %}<div class="rp-desc"><span class="rp-desc-label">描述：</span>{{ p.description | replace('\n','<br>') | safe }}</div>{% endif %}
+                {% if p.contribution %}<div class="rp-desc rp-contribution"><span class="rp-desc-label">个人贡献：</span>{{ p.contribution | replace('\n','<br>') | safe }}</div>{% endif %}
+                {% if p.achievements %}<div class="rp-desc rp-achievements"><span class="rp-desc-label">成果：</span>{{ p.achievements | replace('\n','<br>') | safe }}</div>{% endif %}
+            </div>
+            {% endfor %}
+        </section>
+        {% endif %}
+
+        {% set ns = namespace(has_skill=false) %}
+        {% for s in data.skills %}{% if s['items'] %}{% set ns.has_skill = true %}{% endif %}{% endfor %}
+        {% if ns.has_skill %}
+        <section class="rp-section rp-skills">
+            <h2>技能</h2>
+            <div class="rp-skill-grid">
+                {% for s in data.skills %}{% if s['items'] %}
+                <div class="rp-skill-cat">{{ s['category'] }}</div>
+                <div class="rp-skill-val">{{ s['items'] }}</div>
+                {% endif %}{% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        {% set award_filled = data.awards | selectattr('name') | list %}
+        {% if award_filled %}
+        <section class="rp-section rp-awards">
+            <h2>奖项 / 证书</h2>
+            {% for a in award_filled %}
+            <div class="rp-item">
+                <div class="rp-row"><strong>{{ a.name }}</strong><span>{{ a.date }}</span></div>
+                {% if a.description %}<div class="rp-desc">{{ a.description }}</div>{% endif %}
+            </div>
+            {% endfor %}
+        </section>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script id="resume-style" type="application/json">{{ data.style | tojson }}</script>
+<script>
+(function(){
+    const doc = document.getElementById('resumeDoc');
+    const SafeLocal = window.SafeLocal || localStorage;
+    const RESUME_ID = {{ resume.id }};
+
+    // 模板切换
+    document.querySelectorAll('.tpl-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.tpl-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            // 保留 inline style
+            const inline = doc.getAttribute('style') || '';
+            doc.className = 'resume-doc tpl-' + btn.dataset.tpl;
+            doc.setAttribute('style', inline);
+            SafeLocal.setItem('resume-tpl', btn.dataset.tpl);
+            setTimeout(checkPageOverflow, 50);
+        });
+    });
+    const saved = SafeLocal.getItem('resume-tpl');
+    if (saved) {
+        const b = document.querySelector('.tpl-btn[data-tpl="'+saved+'"]');
+        if (b) b.click();
+    }
+
+    // ── 排版样式 ───────────────────────────────────────
+    const FONT_FAMILIES = {
+        sans: "'Inter','PingFang SC','Microsoft YaHei','Noto Sans SC',sans-serif",
+        serif: "Georgia,'Times New Roman','宋体',serif",
+        songti: "'宋体','SimSun','Songti SC',serif",
+        heiti: "'黑体','SimHei','Heiti SC',sans-serif",
+        mono: "'JetBrains Mono','SF Mono','Consolas',monospace"
+    };
+    const PAGE_MARGINS = { narrow:'8mm 8mm', default:'12mm 12mm', wide:'16mm 16mm' };
+    let STYLE = {};
+    try { STYLE = JSON.parse(document.getElementById('resume-style').textContent) || {}; } catch(e){}
+    function applyStyle() {
+        const fontPct = +STYLE.font_size || 100;
+        doc.style.setProperty('--rd-font-size', (10.5 * fontPct / 100).toFixed(2) + 'pt');
+        doc.style.setProperty('--rd-line-height', STYLE.line_height || 1.55);
+        doc.style.setProperty('--rd-section-gap', (STYLE.section_gap || 5) + 'mm');
+        const pm = (PAGE_MARGINS[STYLE.page_margin || 'default'] || PAGE_MARGINS.default).split(' ');
+        doc.style.setProperty('--rd-padding-y', pm[0]);
+        doc.style.setProperty('--rd-padding-x', pm[1]);
+        if (STYLE.font_family && STYLE.font_family !== 'sans') {
+            doc.style.setProperty('--rd-font-family', FONT_FAMILIES[STYLE.font_family] || FONT_FAMILIES.sans);
+        } else {
+            doc.style.removeProperty('--rd-font-family');
+        }
+        setTimeout(checkPageOverflow, 30);
+    }
+    function syncPanel() {
+        const fs = +STYLE.font_size || 100;
+        const lh = +STYLE.line_height || 1.55;
+        const sg = +STYLE.section_gap || 5;
+        const $ = id => document.getElementById(id);
+        $('cfg-font-size').value = fs;       $('lbl-font-size').textContent = fs + '%';
+        $('cfg-line-height').value = lh;     $('lbl-line-height').textContent = lh.toFixed(2);
+        $('cfg-section-gap').value = sg;     $('lbl-section-gap').textContent = sg + 'mm';
+        $('cfg-font-family').value = STYLE.font_family || 'sans';
+        $('cfg-page-margin').value = STYLE.page_margin || 'default';
+    }
+    function measureContentHeight() {
+        doc.classList.add('measuring-mode');
+        void doc.getBoundingClientRect();
+        const h = doc.offsetHeight;
+        doc.classList.remove('measuring-mode');
+        return h;
+    }
+    function checkPageOverflow() {
+        const h = measureContentHeight();
+        const a4 = 297 * 3.7795;
+        const alert = document.getElementById('page-warn-alert');
+        if (h > a4 + 2) alert.style.display = 'flex';
+        else alert.style.display = 'none';
+    }
+
+    // 面板切换
+    document.getElementById('tplPanelToggle').addEventListener('click', () => {
+        const p = document.getElementById('tplPanel');
+        p.style.display = (p.style.display === 'none' ? 'block' : 'none');
+    });
+    function bind(id, key, parser, fmt) {
+        const el = document.getElementById(id);
+        el.addEventListener('input', () => {
+            STYLE[key] = parser(el.value);
+            if (fmt) {
+                const lbl = document.getElementById('lbl-' + id.replace('cfg-',''));
+                if (lbl) lbl.textContent = fmt(el.value);
+            }
+            applyStyle();
+        });
+    }
+    bind('cfg-font-size', 'font_size', v => +v, v => v + '%');
+    bind('cfg-line-height', 'line_height', v => +v, v => (+v).toFixed(2));
+    bind('cfg-section-gap', 'section_gap', v => +v, v => v + 'mm');
+    bind('cfg-font-family', 'font_family', v => v);
+    bind('cfg-page-margin', 'page_margin', v => v);
+
+    document.getElementById('styleResetBtn').addEventListener('click', () => {
+        STYLE = { font_size:100, line_height:1.55, section_gap:5, page_margin:'default', font_family:'sans' };
+        syncPanel(); applyStyle();
+    });
+    document.getElementById('styleAutoFitBtn').addEventListener('click', async () => {
+        const btn = document.getElementById('styleAutoFitBtn');
+        btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> 适配中...';
+        const A4 = 297 * 3.7795;
+        const TARGET = A4 - 4;
+        const FILL_MIN = A4 * 0.96;
+        const wait2 = () => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+        const measure = async () => {
+            applyStyle(); await wait2();
+            return measureContentHeight();
+        };
+
+        STYLE.line_height = 1.55;
+        STYLE.section_gap = 5;
+
+        let lo = 80, hi = 151;
+        while (hi - lo > 1) {
+            const mid = (lo + hi) >> 1;
+            STYLE.font_size = mid;
+            const mh = await measure();
+            if (mh <= TARGET) lo = mid; else hi = mid;
+        }
+        STYLE.font_size = lo;
+        let h = await measure();
+
+        if (h > TARGET) {
+            let lh_lo = 110, lh_hi = 155;
+            while (lh_hi - lh_lo > 5) {
+                const m = ((lh_lo + lh_hi) / 2) | 0;
+                STYLE.line_height = m / 100;
+                const mh = await measure();
+                if (mh <= TARGET) lh_lo = m; else lh_hi = m;
+            }
+            STYLE.line_height = lh_lo / 100;
+            h = await measure();
+            if (h > TARGET) {
+                for (let g = 5; g >= 1; g--) {
+                    STYLE.section_gap = g; h = await measure();
+                    if (h <= TARGET) break;
+                }
+            }
+        } else if (h < FILL_MIN) {
+            let lh_lo = 155, lh_hi = 280;
+            while (lh_hi - lh_lo > 5) {
+                const m = ((lh_lo + lh_hi) / 2) | 0;
+                STYLE.line_height = m / 100;
+                const mh = await measure();
+                if (mh <= TARGET) lh_lo = m; else lh_hi = m;
+            }
+            STYLE.line_height = lh_lo / 100;
+            h = await measure();
+
+            if (h < FILL_MIN) {
+                let sg_lo = 5, sg_hi = 21;
+                while (sg_hi - sg_lo > 1) {
+                    const m = (sg_lo + sg_hi) >> 1;
+                    STYLE.section_gap = m;
+                    const mh = await measure();
+                    if (mh <= TARGET) sg_lo = m; else sg_hi = m;
+                }
+                STYLE.section_gap = sg_lo;
+                h = await measure();
+            }
+        }
+
+        syncPanel();
+        btn.disabled = false; btn.innerHTML = '<i class="bi bi-magic"></i> 一键适配 1 页';
+    });
+    document.getElementById('styleSaveBtn').addEventListener('click', async () => {
+        // 通过加载完整 resume 数据并 POST 保存样式
+        const btn = document.getElementById('styleSaveBtn');
+        btn.disabled = true; btn.textContent = '保存中...';
+        try {
+            const r = await fetch(`/resume/${RESUME_ID}/style`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(STYLE)
+            });
+            const d = await r.json();
+            if (d.ok) btn.innerHTML = '<i class="bi bi-check-lg"></i> 已保存';
+            else btn.textContent = '失败：' + (d.error || '');
+        } catch(e) { btn.textContent = '网络错误'; }
+        setTimeout(() => { btn.disabled = false; btn.innerHTML = '<i class="bi bi-save"></i> 保存设置'; }, 1500);
+    });
+
+    syncPanel();
+    applyStyle();
+})();
+</script>
+{% endblock %}

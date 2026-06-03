@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}登录{% endblock %}
+{% block content %}
+<div class="auth-wrap">
+    <div class="auth-card">
+        <div class="auth-icon"><i class="bi bi-shield-lock"></i></div>
+        <h3>欢迎回来</h3>
+        <p class="auth-sub">登录 {{ site_name }} 继续你的工作</p>
+        <form method="POST" autocomplete="on">
+            <div class="mb-3">
+                <label for="username" class="form-label">用户名</label>
+                <div class="input-icon">
+                    <input type="text" class="form-control" id="username" name="username" required autofocus autocomplete="username" placeholder="请输入用户名">
+                    <i class="bi bi-person"></i>
+                </div>
+            </div>
+            <div class="mb-4">
+                <label for="password" class="form-label">密码</label>
+                <div class="input-icon">
+                    <input type="password" class="form-control" id="password" name="password" required autocomplete="current-password" placeholder="请输入密码" style="padding-right:2.6rem;">
+                    <i class="bi bi-lock"></i>
+                    <button type="button" class="input-pwd-toggle" onclick="togglePwd('password', this)" tabindex="-1" aria-label="显示密码">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary w-100 btn-lg"><i class="bi bi-box-arrow-in-right"></i> 登录</button>
+        </form>
+        <div class="auth-foot">
+            还没有账号？<a href="{{ url_for('register') }}">立即注册</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+function togglePwd(id, btn) {
+    var el = document.getElementById(id);
+    var icon = btn.querySelector('i');
+    if (el.type === 'password') { el.type = 'text'; icon.className = 'bi bi-eye-slash'; }
+    else { el.type = 'password'; icon.className = 'bi bi-eye'; }
+}
+</script>
+{% endblock %}

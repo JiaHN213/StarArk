@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="dark light">
+    <title>{% block title %}个人站点{% endblock %} · {{ site_name }}</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.png') }}" type="image/png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet">
+    <script>
+        // ── 安全存储（绕过 Tracking Prevention） ──────────
+        (function(){
+            var mem = {};
+            function safe(stor) {
+                try { stor.setItem('__t', '1'); stor.removeItem('__t'); return stor; }
+                catch(e) {
+                    return {
+                        getItem: function(k){ return mem[k] === undefined ? null : mem[k]; },
+                        setItem: function(k,v){ mem[k] = String(v); },
+                        removeItem: function(k){ delete mem[k]; }
+                    };
+                }
+            }
+            window.SafeLocal = safe(window.localStorage);
+            window.SafeSession = safe(window.sessionStorage);
+        })();
+
+        // 早期主题设置：避免主题切换时闪烁
+        (function(){
+            var t = SafeLocal.getItem('theme');
+            if (t === 'tech' || !t) t = 'dark';
+            document.documentElement.setAttribute('data-bs-theme', t);
+        })();
+    </script>
+</head>
+<body>
+    <canvas id="particleCanvas" aria-hidden="true"></canvas>
+
+    <nav class="navbar navbar-expand-lg sticky-top">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="{{ url_for('index') }}">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="" class="brand-logo">
+                <span>{{ site_name }}</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-label="切换菜单">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="mainNav">
+                {% if current_user.is_authenticated %}
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('notes') }}"><i class="bi bi-journal-text"></i><span>笔记</span></a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('files') }}"><i class="bi bi-folder"></i><span>文件</span></a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('code') }}"><i class="bi bi-code-slash"></i><span>代码</span></a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('blog') }}"><i class="bi bi-pencil-square"></i><span>博客</span></a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('resume_list') }}"><i class="bi bi-file-earmark-person"></i><span>简历</span></a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('learn_ai_agent') }}"><i class="bi bi-mortarboard"></i><span>AI 学院</span></a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('shared') }}"><i class="bi bi-globe2"></i><span>广场</span></a></li>
+                    {% if current_user.is_admin %}
+                    <li class="nav-item"><a class="nav-link nav-link-warning" href="{{ url_for('admin') }}"><i class="bi bi-shield-lock"></i><span>管理</span></a></li>
+                    {% endif %}
+                </ul>
+                <ul class="navbar-nav align-items-lg-center">
+                    <li class="nav-item d-none d-lg-flex align-items-center">
+                        <span class="tech-clock" id="liveClock">00:00:00</span>
+                    </li>
+                    <li class="nav-item">
+                        <button id="themeToggle" class="btn-icon" title="切换主题" aria-label="切换主题">
+                            <i class="bi bi-moon-stars"></i>
+                        </button>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center gap-1" href="#" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-person-circle"></i>
+                            <span>{{ current_user.username }}</span>
+                            {% if current_user.is_super_admin %}<span class="badge bg-danger ms-1">超管</span>{% elif current_user.is_admin %}<span class="badge bg-warning text-dark ms-1">管理</span>{% endif %}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="{{ url_for('index') }}"><i class="bi bi-speedometer2"></i> 控制台</a></li>
+                            {% if current_user.is_admin or current_user.is_super_admin %}
+                            <li><a class="dropdown-item" href="{{ url_for('admin') }}"><i class="bi bi-shield-lock"></i> 系统管理</a></li>
+                            {% endif %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('change_password') }}"><i class="bi bi-lock"></i> 修改密码</a></li>
+                            <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right"></i> 登出</a></li>
+                        </ul>
+                    </li>
+                </ul>
+                {% else %}
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <button id="themeToggle" class="btn-icon me-2" title="切换主题" aria-label="切换主题">
+                            <i class="bi bi-moon-stars"></i>
+                        </button>
+                    </li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('login') }}">登录</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('register') }}">注册</a></li>
+                </ul>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-3">
+        {% with messages = get_flashed_messages(with_categories=True) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            <i class="bi bi-{% if category=='success' %}check-circle-fill{% elif category=='danger' %}exclamation-triangle-fill{% elif category=='warning' %}exclamation-circle-fill{% else %}info-circle-fill{% endif %} me-2"></i>
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+    </div>
+
+    <main class="container my-4 page-fade">
+        {% block content %}{% endblock %}
+    </main>
+
+    {% if current_user.is_authenticated %}
+    <div class="float-tools">
+        <div class="float-menu" id="floatMenu">
+            <a href="{{ url_for('note_create') }}" class="float-menu-item"><i class="bi bi-journal-plus"></i> 新建笔记</a>
+            <a href="{{ url_for('code_create') }}" class="float-menu-item"><i class="bi bi-code-slash"></i> 新建代码</a>
+            <a href="#" class="float-menu-item" data-bs-toggle="modal" data-bs-target="#quickUploadModal"><i class="bi bi-cloud-upload"></i> 上传文件</a>
+            <a href="{{ url_for('resume_list') }}" class="float-menu-item"><i class="bi bi-file-earmark-person"></i> 我的简历</a>
+            <a href="{{ url_for('shared') }}" class="float-menu-item"><i class="bi bi-globe2"></i> 共享广场</a>
+        </div>
+        <button class="float-btn float-btn-fab" id="fabBtn" title="快捷操作" aria-label="快捷操作">
+            <i class="bi bi-plus-lg"></i>
+        </button>
+        <button class="float-btn float-btn-back" id="backTop" title="回到顶部" aria-label="回到顶部">
+            <i class="bi bi-chevron-up"></i>
+        </button>
+    </div>
+    {% endif %}
+
+    <footer class="text-center py-4 mt-5 border-top">
+        <small>© 2026 {{ site_name }} · 局域网访问 <code class="px-1">http://{{ local_ip }}:2213</code></small>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" defer></script>
+    <script defer>
+    document.addEventListener('DOMContentLoaded', function(){
+        var prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        // ─── Token 透传 ───────────────────────────────
+        {% if session_token %}
+        SafeSession.setItem('_tok', '{{ session_token }}');
+        {% endif %}
+        (function(){
+            var tok = SafeSession.getItem('_tok');
+            if (!tok) return;
+            function fixUrl(el, attr) {
+                var href = el.getAttribute(attr);
+                if (!href || href[0]==='#' || href.indexOf('javascript:')===0 || /^https?:/.test(href)) return;
+                if (href.indexOf('token=') !== -1) return;
+                el.setAttribute(attr, href + (href.indexOf('?')>-1?'&':'?') + 'token=' + tok);
+            }
+            function fixAll(){
+                document.querySelectorAll('a[href^="/"]:not([data-tok-fixed])').forEach(function(a){ fixUrl(a,'href'); a.dataset.tokFixed='1'; });
+                document.querySelectorAll('form[action^="/"]:not([data-tok-fixed])').forEach(function(f){ fixUrl(f,'action'); f.dataset.tokFixed='1'; });
+            }
+            fixAll();
+            // 仅观察一次后续动态插入，2 秒后停止
+            var mo = new MutationObserver(function(){ fixAll(); });
+            mo.observe(document.body, {childList:true, subtree:true});
+            setTimeout(function(){ mo.disconnect(); }, 2000);
+        })();
+
+        // ─── 弹窗逃逸：显示前移动到 <body> 顶层 ─────────
+        // 防止 modal 被带 transform/filter/opacity 的祖先(如 .page-fade)
+        // 困在局部层叠上下文里，被 .modal-backdrop 盖住导致点击失效。
+        document.addEventListener('show.bs.modal', function(e){
+            var modal = e.target;
+            if (modal && modal.parentNode !== document.body) {
+                document.body.appendChild(modal);
+            }
+        });
+
+        // ─── 主题切换 ─────────────────────────────────
+        (function(){
+            var html = document.documentElement;
+            document.querySelectorAll('#themeToggle').forEach(function(btn){
+                var icon = btn.querySelector('i');
+                function sync(){ var cur=html.getAttribute('data-bs-theme'); icon.className = cur==='dark'?'bi bi-sun':'bi bi-moon-stars'; }
+                sync();
+                btn.addEventListener('click', function(){
+                    var next = html.getAttribute('data-bs-theme')==='dark'?'light':'dark';
+                    html.setAttribute('data-bs-theme', next);
+                    SafeLocal.setItem('theme', next);
+                    document.querySelectorAll('#themeToggle i').forEach(function(i){ i.className = next==='dark'?'bi bi-sun':'bi bi-moon-stars'; });
+                });
+            });
+        })();
+
+        // ─── 回到顶部 ─────────────────────────────────
+        var backBtn = document.getElementById('backTop');
+        if (backBtn) {
+            backBtn.addEventListener('click', function(){ window.scrollTo({top:0,behavior:'smooth'}); });
+            window.addEventListener('scroll', function(){
+                if (window.scrollY > 400) backBtn.classList.add('visible');
+                else backBtn.classList.remove('visible');
+            }, { passive: true });
+        }
+
+        // ─── FAB ──────────────────────────────────────
+        var fab = document.getElementById('fabBtn');
+        var fmenu = document.getElementById('floatMenu');
+        if (fab) {
+            fab.addEventListener('click', function(){ fmenu.classList.toggle('open'); fab.classList.toggle('open'); });
+            document.addEventListener('click', function(e){
+                if (!fab.contains(e.target) && !fmenu.contains(e.target)) {
+                    fmenu.classList.remove('open'); fab.classList.remove('open');
+                }
+            });
+        }
+
+        // ─── 键盘快捷键 ───────────────────────────────
+        {% if current_user.is_authenticated %}
+        document.addEventListener('keydown', function(e){
+            if (e.ctrlKey || e.metaKey || e.altKey) return;
+            var tag = e.target.tagName;
+            if (tag==='INPUT' || tag==='TEXTAREA' || tag==='SELECT' || e.target.isContentEditable) return;
+            var map = {
+                'n': '{{ url_for("note_create") }}',
+                'c': '{{ url_for("code_create") }}',
+                'u': '{{ url_for("files") }}',
+                'b': '{{ url_for("blog_create") }}',
+                's': '{{ url_for("shared") }}',
+                'h': '{{ url_for("index") }}',
+                'r': '{{ url_for("resume_list") }}'
+            };
+            var k = e.key.toLowerCase();
+            if (map[k]) { window.location.href = map[k]; }
+        });
+        {% endif %}
+
+        // ─── 实时时钟 ─────────────────────────────────
+        var clk = document.getElementById('liveClock');
+        if (clk) {
+            function tick(){ clk.textContent = new Date().toLocaleTimeString('zh-CN',{hour12:false}); }
+            tick(); setInterval(tick, 1000);
+        }
+
+        // ─── 滚动进入动画 ─────────────────────────────
+        if (!prefersReduced) {
+            var observer = new IntersectionObserver(function(entries){
+                entries.forEach(function(en){ if(en.isIntersecting){ en.target.classList.add('visible'); observer.unobserve(en.target); } });
+            }, { threshold: 0.08 });
+            document.querySelectorAll('.card:not(.stat-card):not(.no-reveal), .hero, .landing-hero, .feature-card').forEach(function(el){
+                el.classList.add('reveal'); observer.observe(el);
+            });
+        }
+
+        // ─── 统计数字滚动 ─────────────────────────────
+        if (!prefersReduced) {
+            document.querySelectorAll('.stat-value').forEach(function(el){
+                var target = parseInt(el.textContent) || 0;
+                if (target > 0 && !el.dataset.animated) {
+                    el.dataset.animated = '1';
+                    var start = performance.now(), dur = 800;
+                    function step(now){
+                        var p = Math.min(1, (now-start)/dur);
+                        var ease = 1 - Math.pow(1-p, 3);
+                        el.textContent = Math.floor(target * ease);
+                        if (p < 1) requestAnimationFrame(step);
+                        else el.textContent = target;
+                    }
+                    requestAnimationFrame(step);
+                }
+            });
+        }
+
+        // ─── 卡片倾斜 ─────────────────────────────────
+        if (!prefersReduced && window.matchMedia('(hover: hover)').matches) {
+            var tiltCards = document.querySelectorAll('.tilt-card');
+            tiltCards.forEach(function(wrap){
+                var card = wrap.querySelector('.card');
+                if (!card) return;
+                wrap.addEventListener('mousemove', function(e){
+                    var r = wrap.getBoundingClientRect();
+                    var x = e.clientX - r.left, y = e.clientY - r.top;
+                    var rx = (y/r.height - 0.5) * 6;
+                    var ry = (x/r.width - 0.5) * -6;
+                    card.style.transform = 'perspective(800px) rotateX('+rx+'deg) rotateY('+ry+'deg)';
+                });
+                wrap.addEventListener('mouseleave', function(){ card.style.transform = ''; });
+            });
+        }
+
+        // ─── 粒子网络 ─────────────────────────────────
+        (function(){
+            var c = document.getElementById('particleCanvas');
+            if (!c || prefersReduced) return;
+            var ctx = c.getContext('2d'), w, h, pts;
+            var N = Math.min(60, Math.floor((window.innerWidth*window.innerHeight)/24000));
+            function resize(){
+                var dpr = Math.min(window.devicePixelRatio||1, 2);
+                w = window.innerWidth; h = window.innerHeight;
+                c.width = w*dpr; c.height = h*dpr;
+                c.style.width = w+'px'; c.style.height = h+'px';
+                ctx.setTransform(dpr,0,0,dpr,0,0);
+            }
+            resize();
+            pts = [];
+            for (var i=0;i<N;i++) pts.push({x:Math.random()*w, y:Math.random()*h, vx:(Math.random()-0.5)*0.4, vy:(Math.random()-0.5)*0.4, r:Math.random()*2+1});
+            var paused = false;
+            document.addEventListener('visibilitychange', function(){ paused = document.hidden; if (!paused) requestAnimationFrame(draw); });
+            function draw(){
+                if (paused) return;
+                ctx.clearRect(0,0,w,h);
+                var t = document.documentElement.getAttribute('data-bs-theme');
+                var cl = t==='light' ? '0,128,176' : '0,212,255';
+                for (var i=0;i<pts.length;i++) {
+                    var p = pts[i];
+                    p.x += p.vx; p.y += p.vy;
+                    if (p.x<0||p.x>w) p.vx*=-1;
+                    if (p.y<0||p.y>h) p.vy*=-1;
+                    ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+                    ctx.fillStyle='rgba('+cl+',0.55)'; ctx.fill();
+                    for (var j=i+1;j<pts.length;j++) {
+                        var q = pts[j], dx=p.x-q.x, dy=p.y-q.y, d2=dx*dx+dy*dy;
+                        if (d2 < 28000) {
+                            var a = 0.18 * (1 - d2/28000);
+                            ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(q.x,q.y);
+                            ctx.strokeStyle='rgba('+cl+','+a+')'; ctx.lineWidth=0.6; ctx.stroke();
+                        }
+                    }
+                }
+                requestAnimationFrame(draw);
+            }
+            window.addEventListener('resize', resize);
+            requestAnimationFrame(draw);
+        })();
+    });
+    </script>
+
+    {% block scripts %}{% endblock %}
+
+    {% if current_user.is_authenticated %}
+    {% include 'ai_chat.html' %}
+    {% endif %}
+</body>
+</html>

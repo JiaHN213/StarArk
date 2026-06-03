@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}{{ '编辑博客' if post else '发布博客' }}{% endblock %}
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-{{ 'pencil' if post else 'pencil-square' }}"></i> {{ '编辑博客' if post else '发布博客' }}</h2>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">标题</label>
+                        <input type="text" class="form-control" id="title" name="title"
+                               value="{{ post.title if post else '' }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="content" class="form-label">正文 (支持 Markdown)</label>
+                        <textarea class="form-control" id="content" name="content" rows="16"
+                                  style="font-family: 'Courier New', monospace;">{{ post.content if post else '' }}</textarea>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="is_public" name="is_public"
+                               {% if post and post.is_public %}checked{% endif %}>
+                        <label class="form-check-label" for="is_public">公开（全站可见，出现在共享广场）</label>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> {{ '更新' if post else '发布' }}</button>
+                        <a href="{{ url_for('blog') }}" class="btn btn-outline-secondary">取消</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card shadow-sm">
+            <div class="card-header"><i class="bi bi-eye"></i> 预览</div>
+            <div class="card-body">
+                <div id="preview" class="markdown-body"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+(function() {
+    var content = document.getElementById('content');
+    var preview = document.getElementById('preview');
+    function update() { preview.innerHTML = marked.parse(content.value || '*暂无内容*'); }
+    content.addEventListener('input', update);
+    update();
+})();
+</script>
+{% endblock %}
